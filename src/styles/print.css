@@ -21,7 +21,7 @@
   .rules-body th { background: #eee !important; }
   .rules-body th, .rules-body td { border-color: #555 !important; }
   .rules-body .entry, .rules-body tr { break-inside: avoid; page-break-inside: avoid; }
-  .app { max-width: none; padding: 0; margin: 0; }
+  .app { max-width: none; padding: 0; margin: 0; min-height: 0; display: block; }
   .step { display: none !important; }
   #step-5 { display: block !important; animation: none; }
   #step-5 > .panel { background: none; border: 0; box-shadow: none; padding: 0; }

@@ -6,7 +6,7 @@ import { FEEDING } from "../../data/feeding.js";
 import { BLOOD_PACK } from "../../data/clothing.js";
 import { character, rules } from "../../stores/editor.js";
 import { fmt, woundRange } from "../../character/format.js";
-import { rollSave, rollGrapple, rollHeal } from "../../stores/rolls.js";
+import { rollFrenzy, rollGrapple, rollHeal } from "../../stores/rolls.js";
 
 const clan = computed(() => rules.clan());
 const maxHP = computed(() => rules.combatStats().hp);
@@ -69,7 +69,7 @@ const humanityLine = HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.sli
           </tr>
         </tbody>
       </table>
-      <p style="margin:4px 0 0;font-size:9.5pt"><span class="rollable" @click="rollSave('wis', 'Бешенство: спасбросок ВОС')">Спасбросок ВОС d20 {{ fmt(rules.mod("wis")) }}.</span> {{ BEAST_FAIL }}
+      <p style="margin:4px 0 0;font-size:9.5pt"><span class="rollable" @click="rollFrenzy">Спасбросок ВОС d20 {{ fmt(rules.mod("wis")) }} (+2 при Человечности 7+).</span> {{ BEAST_FAIL }}
         Человечность — {{ humanityLine }}</p>
     </section>
 

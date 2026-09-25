@@ -15,7 +15,8 @@ export const CONFIG = {
   maxBonusPoints: 12,
   baseAC: 10,
   baseBP: 5,
-  generationOptions: [13, 12],
+  playerGeneration: 12,
+  adminGenerations: [12, 11, 10, 9, 8, 7, 6, 5, 4],
   startingBloodPotency: 1,
 };
 
@@ -29,3 +30,11 @@ export const ABILITIES = [
 ];
 
 export const TOTAL_STEPS = 5;
+
+// Шкала Сложностей проверок для Мастера
+export const DIFFICULTY = [
+  { dc: 10, name: "лёгкая" },
+  { dc: 13, name: "средняя" },
+  { dc: 16, name: "трудная" },
+  { dc: 20, name: "почти невозможная" },
+];

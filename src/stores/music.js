@@ -2,7 +2,7 @@ import { reactive } from "vue";
 import { lsGet, lsSet } from "../lib/storage.js";
 
 const STORAGE_KEY = "wod-music";
-// Треки играют по очереди, после последнего — снова первый
+// Первый трек выбирается случайно при каждом открытии, дальше — по очереди
 const TRACKS = ["theme.mp3", "theme2.mp3"].map(f => `${import.meta.env.BASE_URL}music/${f}`);
 
 export const music = reactive({
@@ -39,6 +39,13 @@ function play() {
   });
 }
 
+export const hasPlaylist = TRACKS.length > 1;
+
+export function nextTrack() {
+  load(current + 1);
+  if (music.on) play();
+}
+
 export function toggleMusic() {
   music.on = !music.on;
   lsSet(STORAGE_KEY, music.on ? "on" : "off");
@@ -46,5 +53,5 @@ export function toggleMusic() {
   else audio.pause();
 }
 
-load(0);
+load(Math.floor(Math.random() * TRACKS.length));
 play();

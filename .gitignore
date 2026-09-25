@@ -5,3 +5,4 @@ node_modules/
 supabase/*.local.sql
 dist/
 PROJECT.md
+HISTORY.md

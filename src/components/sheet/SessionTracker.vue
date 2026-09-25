@@ -6,6 +6,7 @@ import { NOTES_MAX } from "../../character/sanitize.js";
 import VSelect from "../common/VSelect.vue";
 import { drinkBloodPack } from "../../stores/rolls.js";
 import { BLOOD_PACK } from "../../data/clothing.js";
+import { HUMANITY_ZERO } from "../../data/beast.js";
 
 const s = computed(() => character.session);
 const live = computed(() => rules.live());
@@ -24,7 +25,7 @@ function setHP(v) {
   s.value.hp = hp === live.value.max ? null : hp;
 }
 const setTemp = v => { s.value.tempHP = clamp(v, 0, 99); };
-const setBP = v => { s.value.bp = clamp(v, 0, CONFIG.baseBP); };
+const setBP = v => { s.value.bp = clamp(v, 0, rules.maxBP()); };
 const setPacks = v => { s.value.packs = clamp(v, 0, rules.clothing()?.bloodPacks ?? 0); };
 const setHumanity = v => { s.value.humanity = clamp(v, 0, CONFIG.maxHumanity); };
 
@@ -34,7 +35,7 @@ function newCombat() {
 }
 function newSession() {
   newCombat();
-  s.value.bp = CONFIG.baseBP;
+  s.value.bp = rules.maxBP();
 }
 </script>
 
@@ -69,12 +70,12 @@ function newSession() {
           <button type="button" :disabled="locked" @click="setTemp(s.tempHP + 1)">+</button>
         </div>
       </div>
-      <div class="counter">
+      <div class="counter wide">
         <span class="field-lbl">Пункты Крови</span>
         <div class="pips">
-          <button v-for="n in CONFIG.baseBP" :key="n" type="button" class="pip" :class="{ full: n <= s.bp }"
+          <button v-for="n in rules.maxBP()" :key="n" type="button" class="pip" :class="{ full: n <= s.bp }"
                   :disabled="locked" :aria-label="`ПК: ${n}`" @click="setBP(n === s.bp ? n - 1 : n)"></button>
-          <span class="of">{{ s.bp }} / {{ CONFIG.baseBP }}</span>
+          <span class="of">{{ s.bp }} / {{ rules.maxBP() }}</span>
         </div>
       </div>
       <div v-if="rules.clothing()" class="counter">
@@ -113,6 +114,7 @@ function newSession() {
       <template v-else-if="live.stage && live.stage.level > 0">Уровень {{ live.stage.level }} — {{ live.stage.short }}</template>
       <template v-else>здоров, штрафов нет.</template>
       <template v-if="live.severe"><br><b>{{ live.severe.cheatName }}:</b> {{ live.severe.short }}</template>
+      <template v-if="live.humanity === 0"><br><b>Человечность 0:</b> {{ HUMANITY_ZERO }}</template>
     </div>
 
     <label class="field notes"><span>Заметки (снаряжение, деньги, зацепки)</span>
@@ -131,6 +133,8 @@ function newSession() {
 .counters { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 12px; }
 .counter { background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 10px; }
 .ctl, .pips { display: flex; align-items: center; gap: 6px; }
+.counter.wide { grid-column: 1 / -1; }
+.pips { flex-wrap: wrap; }
 .ctl button { padding: 4px 12px; font-size: 1rem; letter-spacing: 0; }
 .ctl input { width: 64px; text-align: center; padding: 6px; font-family: var(--font-title); font-size: 1.2rem; }
 .val { min-width: 40px; text-align: center; font-family: var(--font-title); font-size: 1.4rem; }

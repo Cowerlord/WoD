@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { dice, hideRoll, reroll, rollFree } from "../../stores/dice.js";
 import { fmt } from "../../character/format.js";
 import D20 from "./D20.vue";
@@ -11,7 +11,16 @@ watch(() => dice.rolling, on => {
   clearInterval(timer);
   if (on) timer = setInterval(() => { flicker.value = 1 + Math.floor(Math.random() * 20); }, 60);
 });
-onBeforeUnmount(() => clearInterval(timer));
+// Клик мимо лотка закрывает его; новый бросок (по строке листа, кнопке кубика) — не закрывает
+const ROLL_TARGETS = ".tray, .rollable, .free, .drink";
+function onOutside(e) {
+  if (dice.current && !e.target.closest(ROLL_TARGETS)) hideRoll();
+}
+onMounted(() => document.addEventListener("pointerdown", onOutside));
+onBeforeUnmount(() => {
+  clearInterval(timer);
+  document.removeEventListener("pointerdown", onOutside);
+});
 
 const face = computed(() => {
   if (dice.rolling) return flicker.value;

@@ -3,10 +3,12 @@ import { auth, isAdmin } from "../stores/auth.js";
 import { ui, setMode } from "../stores/ui.js";
 import { roster } from "../stores/roster.js";
 import { logout } from "../stores/session.js";
-import { music, toggleMusic } from "../stores/music.js";
+import { music, toggleMusic, nextTrack, hasPlaylist } from "../stores/music.js";
 import { ref } from "vue";
 import PatchNotes from "./PatchNotes.vue";
 import ChangePassword from "./ChangePassword.vue";
+import { campaign, heatLevel } from "../stores/campaign.js";
+import { MASQUERADE } from "../data/masquerade.js";
 
 const passwordOpen = ref(false);
 
@@ -27,6 +29,8 @@ const modes = [
               :aria-label="music.on ? 'Выключить музыку' : 'Включить музыку'" @click="toggleMusic">
         {{ music.on ? "🔊" : "🔇" }}
       </button>
+      <button v-if="music.available && hasPlaylist" type="button" class="music" title="Следующий трек"
+              aria-label="Следующий трек" @click="nextTrack">⏭</button>
     </div>
     <h1>Становление Сородича</h1>
     <template v-if="auth.status === 'in'">
@@ -38,6 +42,8 @@ const modes = [
       </div>
       <div class="user-bar">
         <span><b>{{ auth.me.username }}</b> <span v-if="isAdmin()" class="role">· админ</span></span>
+        <span v-if="campaign.loaded" class="heat" :class="{ hot: campaign.heat >= 3 }"
+              :title="heatLevel()?.text || 'Маскарад спокоен'">🔥 Маскарад {{ campaign.heat }}/{{ MASQUERADE.max }}</span>
         <span :class="{ err: roster.saveFailed }">{{ roster.saveStatus }}</span>
         <button type="button" @click="passwordOpen = true">Пароль</button>
         <button type="button" @click="logout">Выйти</button>
@@ -49,14 +55,10 @@ const modes = [
 
 <style scoped>
 .app-header { position: relative; }
-.corner { position: absolute; top: 0; right: 0; display: flex; gap: 6px; align-items: center; }
+.corner { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-bottom: 6px; }
 .music { padding: 6px 10px; font-size: 1.1rem; letter-spacing: 0; border-color: var(--border); }
 .music.off { opacity: .6; }
-h1 { padding: 0 150px; }
-@media (max-width: 760px) {
-  .corner { position: static; justify-content: flex-end; margin-bottom: 8px; }
-  h1 { padding: 0; }
-}
+
 .modes { display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .modes button { padding: 8px 20px; font-size: .85rem; }
 .modes button.on { background: var(--blood); color: #fff; }
@@ -68,4 +70,6 @@ h1 { padding: 0 150px; }
 .role { color: var(--gold); font-style: italic; }
 .user-bar button { padding: 4px 12px; font-size: .75rem; }
 .err { color: #ffb3b3; }
+.heat { color: var(--text-dim); }
+.heat.hot { color: #ffb3b3; }
 </style>

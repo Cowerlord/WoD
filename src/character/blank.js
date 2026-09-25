@@ -25,7 +25,7 @@ export function blankCharacter() {
     disciplines: {},
     bonusPoints: 0,
     weaponId: null,
-    generation: CONFIG.generationOptions[0],
+    generation: CONFIG.playerGeneration,
     bloodPotency: CONFIG.startingBloodPotency,
     humanity: CONFIG.startingHumanity,
     avatar: null,

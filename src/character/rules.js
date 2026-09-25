@@ -4,6 +4,8 @@ import { DISCIPLINE_PASSIVES, SAVE_DC } from "../data/disciplines.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
 import { WEAPONS, MASTERY, STEALTH_DC } from "../data/weapons.js";
 import { CLOTHING } from "../data/clothing.js";
+import { generationInfo } from "../data/blood.js";
+import { humanityFrenzy } from "../data/beast.js";
 import { ARMOR } from "../data/armor.js";
 import { HEALING, WOUND_STAGES } from "../data/combat.js";
 import { modOf, fmt, abbrOf, discipline, stageForHP } from "./format.js";
@@ -13,7 +15,7 @@ export const skillById = id => SKILLS.find(k => k.id === id) || null;
 // Короткая строка состояния для карточки: «HP 14/18 · ПК 3/5 · Ур. 1»
 export function liveSummary(ch) {
   const l = characterRules(ch).live();
-  const parts = [`HP ${l.hp}/${l.max}`, `ПК ${ch.session.bp}/${CONFIG.baseBP}`];
+  const parts = [`HP ${l.hp}/${l.max}`, `ПК ${ch.session.bp}/${generationInfo(ch.generation).maxBP}`];
   if (ch.session.tempHP) parts.push(`врем. ${ch.session.tempHP}`);
   if (l.stage?.level) parts.push(`ур. ${l.stage.level}`);
   if (l.severe) parts.push(l.severe.cheatName);
@@ -26,6 +28,9 @@ export function characterRules(ch) {
   const clan = () => CLANS.find(c => c.id === ch.clanId) || null;
   const weapon = () => WEAPONS.find(w => w.id === ch.weaponId) || null;
   const armor = () => ARMOR.find(a => a.id === ch.armorId) || null;
+  const generation = () => generationInfo(ch.generation);
+  const maxBP = () => generation().maxBP;
+  const frenzy = () => humanityFrenzy(ch.session.humanity ?? ch.humanity);
   const clothing = () => CLOTHING.find(c => c.id === ch.clothingId) || null;
   const clothingAllowed = c => !c.excludeClans?.includes(ch.clanId);
   const stealthDC = () => clothing()?.stealthDC?.[ch.weaponId] ?? STEALTH_DC;
@@ -50,7 +55,7 @@ export function characterRules(ch) {
     return {
       hp: CONFIG.baseHP + CONFIG.hpConMultiplier * mod("con") + passiveBonus("hp"),
       ac: CONFIG.baseAC + (a ? a.ac : mod("dex")) + passiveBonus("ac"),
-      bp: CONFIG.baseBP,
+      bp: maxBP(),
       speed: Math.min(CONFIG.maxSpeed, Math.max(CONFIG.minSpeed, CONFIG.baseSpeed + passiveBonus("speed"))),
       init: mod("dex") + passiveBonus("init") + (a?.init || 0),
       initAdvantage: hasDisc("celerity", 2) && !a?.dexDisadvantage,
@@ -150,7 +155,7 @@ export function characterRules(ch) {
   }
 
   return {
-    mod, clan, weapon, armor, clothing, clothingAllowed, stealthDC,
+    mod, clan, weapon, armor, clothing, clothingAllowed, stealthDC, generation, maxBP, frenzy,
     discLevel, hasDisc, learnedDisciplines, pointsSpent, pointsBudget, passiveNote,
     clanSkillId, skillAllowed, skillBonus,
     combatStats, fillTokens, saveDCs,

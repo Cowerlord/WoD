@@ -3,6 +3,8 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import { master, loadParty, partyMember, addPlayers, addEnemies, rollAll, sortEntries, nextTurn, prevTurn, removeEntry, endCombat } from "../../stores/master.js";
 import { fmt } from "../../character/format.js";
 import ConfirmButton from "../common/ConfirmButton.vue";
+import { campaign, changeHeat, heatLevel } from "../../stores/campaign.js";
+import { MASQUERADE } from "../../data/masquerade.js";
 
 const picked = ref([]);
 const enemy = reactive({ name: "", hp: 10, ac: 10, initMod: 0, count: 1 });
@@ -20,6 +22,9 @@ function addEnemy() {
   enemy.name = "";
   enemy.count = 1;
 }
+
+// Первый раунд: первая половина по инициативе атакует с преимуществом
+const firstStrike = i => master.round === 1 && master.entries.every(e => e.init != null) && i < Math.floor(master.entries.length / 2);
 
 const setHP = (e, v) => { e.hp = Math.max(0, Math.min(e.maxHp, Math.round(Number(v) || 0))); };
 const setInit = (e, v) => { e.init = v === "" ? null : Math.round(Number(v)); };
@@ -60,6 +65,7 @@ onBeforeUnmount(() => clearInterval(timer));
             </td>
             <td>
               <b>{{ i === master.turn ? "▶ " : "" }}{{ e.name }}</b>
+              <em v-if="firstStrike(i)" class="adv">атака с преимуществом</em>
               <small v-if="e.kind === 'pc'">{{ partyMember(e.charId)?.owner }} · {{ partyMember(e.charId)?.status }}</small>
               <small v-else>противник</small>
             </td>
@@ -78,7 +84,23 @@ onBeforeUnmount(() => clearInterval(timer));
           </tr>
         </tbody>
       </table>
-      <p class="hint legend">↑ — инициатива с преимуществом, ↓ — с помехой. Хиты игроков приходят с их листов (обновляются сами).</p>
+      <p class="hint legend">↑ — инициатива с преимуществом, ↓ — с помехой. В первом раунде первая половина по инициативе
+        атакует с преимуществом. Хиты игроков приходят с их листов (обновляются сами).</p>
+    </div>
+
+    <div class="panel masq">
+      <h3>Маскарад · Жара {{ campaign.heat }} / {{ MASQUERADE.max }}</h3>
+      <p v-if="!campaign.loaded" class="error">Нет таблицы campaign в базе — выполните SQL из supabase/schema.sql.</p>
+      <template v-else>
+        <div class="heat-row">
+          <button type="button" :disabled="campaign.heat === 0" @click="changeHeat(-1)">−</button>
+          <span v-for="n in MASQUERADE.max" :key="n" class="flame" :class="{ on: n <= campaign.heat }">🔥</span>
+          <button type="button" :disabled="campaign.heat === MASQUERADE.max" @click="changeHeat(1)">+</button>
+        </div>
+        <p class="hint">{{ heatLevel()?.text || "Спокойно." }} Растёт: {{ MASQUERADE.triggers.join(", ").toLowerCase() }}.
+          <template v-for="l in MASQUERADE.levels" :key="l.at"> На {{ l.at }}: {{ l.text.toLowerCase() }}</template>
+          Игроки видят Жару в шапке сайта.</p>
+      </template>
     </div>
 
     <div class="cols">
@@ -126,6 +148,7 @@ onBeforeUnmount(() => clearInterval(timer));
 .order tr.down { opacity: .45; }
 .order tr.down b { text-decoration: line-through; }
 .order tr.pc b { color: var(--gold); }
+.adv { display: inline-block; margin-left: 6px; padding: 0 6px; font-size: .7rem; font-style: normal; color: #f0c060; border: 1px solid #f0c060; border-radius: 8px; }
 .num { width: 64px; padding: 4px 6px; text-align: center; }
 .hp { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .hp button { padding: 3px 8px; font-size: .75rem; letter-spacing: 0; }
@@ -133,6 +156,12 @@ onBeforeUnmount(() => clearInterval(timer));
 .x { padding: 3px 8px; border-color: var(--border); letter-spacing: 0; }
 .legend { margin: 10px 0 0; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.masq { margin-top: 16px; }
+.masq h3 { margin-top: 0; }
+.heat-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.heat-row button { padding: 4px 14px; letter-spacing: 0; }
+.flame { font-size: 1.4rem; opacity: .2; filter: grayscale(1); }
+.flame.on { opacity: 1; filter: none; }
 .cols h3 { margin-top: 0; }
 .pick { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 8px; cursor: pointer; }
 .pick input { margin-top: 6px; accent-color: var(--blood-bright); }

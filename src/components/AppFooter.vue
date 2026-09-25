@@ -4,8 +4,9 @@
 
 <style scoped>
 .site-footer {
-  margin-top: 48px; padding-bottom: 76px; text-align: center;
+  margin-top: auto; padding: 40px 0 0; text-align: center;
   font-size: .7rem; letter-spacing: .04em; color: var(--text-dim); opacity: .7;
 }
+@media (max-width: 640px) { .site-footer { padding: 40px 72px 0; } }
 @media print { .site-footer { display: none; } }
 </style>

@@ -65,6 +65,13 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) saveC
 
 watch(() => roster.rejection, r => { if (r?.id === character.id) showError(character.step, r.message); });
 
+// Сила Крови и потолок ПК идут от Поколения
+watchEffect(() => {
+  const g = rules.generation();
+  if (character.bloodPotency !== g.potency) character.bloodPotency = g.potency;
+  if (character.session.bp > g.maxBP) character.session.bp = g.maxBP;
+});
+
 // Одежда, недоступная новому клану, меняется на повседневную
 watchEffect(() => {
   const c = rules.clothing();

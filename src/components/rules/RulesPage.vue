@@ -12,6 +12,7 @@ import RulesSkills from "./RulesSkills.vue";
 import RulesArmor from "./RulesArmor.vue";
 import RulesClothing from "./RulesClothing.vue";
 import RulesHumanity from "./RulesHumanity.vue";
+import RulesMasquerade from "./RulesMasquerade.vue";
 import RulesGenerations from "./RulesGenerations.vue";
 
 const sections = [
@@ -26,6 +27,7 @@ const sections = [
   { id: "armor", title: "Броня", component: RulesArmor },
   { id: "clothing", title: "Одежда", component: RulesClothing },
   { id: "humanity", title: "Человечность", component: RulesHumanity },
+  { id: "masquerade", title: "Маскарад", component: RulesMasquerade },
   { id: "generations", title: "Поколение и Сила Крови", component: RulesGenerations },
 ];
 

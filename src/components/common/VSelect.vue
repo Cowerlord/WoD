@@ -2,6 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, ref } from "vue";
 
 // options: [{ value, label, disabled?, hint?, group? }]
+// Список часто стоит внутри <label>: клики по нему отменяются (prevent), иначе label снова «нажмёт» кнопку и откроет список
 const props = defineProps({
   modelValue: { type: null, default: null },
   options: { type: Array, required: true },
@@ -81,12 +82,12 @@ onBeforeUnmount(close);
       <div class="vs-value" :class="{ placeholder: !selected }">{{ selected?.label ?? placeholder }}</div>
       <div class="vs-arrow">▾</div>
     </button>
-    <div v-if="open" ref="list" class="vs-list" role="listbox">
+    <div v-if="open" ref="list" class="vs-list" role="listbox" @click.prevent>
       <template v-for="(o, i) in options" :key="String(o.value)">
         <div v-if="o.group && o.group !== options[i - 1]?.group" class="vs-group">{{ o.group }}</div>
         <div role="option" class="vs-opt" :class="{ sel: o.value === modelValue, active: i === active, off: o.disabled }"
              :aria-selected="o.value === modelValue" :aria-disabled="!!o.disabled"
-             @mousedown.prevent @mouseenter="enabled(i) && (active = i)" @click="choose(o)">
+             @mousedown.prevent @mouseenter="enabled(i) && (active = i)" @click.prevent="choose(o)">
           {{ o.label }}<small v-if="o.hint" class="vs-hint">{{ o.hint }}</small>
         </div>
       </template>

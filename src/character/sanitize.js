@@ -5,6 +5,7 @@ import { ARMOR } from "../data/armor.js";
 import { CLOTHING, DEFAULT_CLOTHING } from "../data/clothing.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
 import { blankCharacter } from "./blank.js";
+import { generationInfo } from "../data/blood.js";
 
 export const NOTES_MAX = 2000;
 
@@ -52,8 +53,8 @@ export function sanitizeCharacter(d) {
 
   out.bonusPoints = clampInt(d.bonusPoints, 0, CONFIG.maxBonusPoints, 0);
   out.weaponId = WEAPONS.some(w => w.id === d.weaponId) ? d.weaponId : null;
-  out.generation = CONFIG.generationOptions.includes(Number(d.generation)) ? Number(d.generation) : CONFIG.generationOptions[0];
-  out.bloodPotency = clampInt(d.bloodPotency, 1, 5, CONFIG.startingBloodPotency);
+  out.generation = CONFIG.adminGenerations.includes(Number(d.generation)) ? Number(d.generation) : CONFIG.playerGeneration;
+  out.bloodPotency = generationInfo(out.generation).potency;
   out.humanity = clampInt(d.humanity, 0, CONFIG.maxHumanity, CONFIG.startingHumanity);
   out.avatar = typeof d.avatar === "string" && d.avatar.length < 4_000_000 && AVATAR_RE.test(d.avatar) ? d.avatar : null;
 
@@ -71,7 +72,7 @@ export function sanitizeCharacter(d) {
   out.session = {
     hp: s.hp == null ? null : clampInt(s.hp, 0, 999, null),
     tempHP: clampInt(s.tempHP, 0, 99, 0),
-    bp: clampInt(s.bp, 0, CONFIG.baseBP, CONFIG.baseBP),
+    bp: clampInt(s.bp, 0, generationInfo(out.generation).maxBP, generationInfo(out.generation).maxBP),
     packs: clampInt(s.packs, 0, CLOTHING.find(c => c.id === out.clothingId).bloodPacks, 0),
     humanity: s.humanity == null ? null : clampInt(s.humanity, 0, CONFIG.maxHumanity, null),
     severe: clampInt(s.severe, 0, 2, 0),

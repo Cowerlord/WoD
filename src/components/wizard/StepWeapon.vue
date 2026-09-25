@@ -45,7 +45,7 @@ function selectWeapon(id) {
     <div class="card-grid">
       <label v-for="x in WEAPONS" :key="x.id" class="card" :class="{ selected: x.id === character.weaponId }">
         <input type="radio" name="weapon" :value="x.id" :checked="x.id === character.weaponId" @change="selectWeapon(x.id)">
-        {{ x.name }}<small>{{ damageFormula(x, rules.weaponDie(x)) }} · {{ x.type }}</small>
+        {{ x.name }} <small>{{ damageFormula(x, rules.weaponDie(x)) }} · {{ x.type }}</small>
       </label>
     </div>
     <div class="info-box">

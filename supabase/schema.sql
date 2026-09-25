@@ -189,21 +189,49 @@ $$;
 revoke all on function public.ping() from public;
 grant execute on function public.ping() to anon, authenticated;
 
--- ---------- Доп. очки Дисциплин выдаёт только админ ----------
--- Игрок при создании получает 0, при сохранении у него остаётся прежнее значение
-create or replace function private.guard_bonus_points()
+-- ---------- Поля, которые меняет только админ: доп. очки, Поколение, Сила Крови ----------
+-- Игрок при создании получает стартовые значения, при сохранении у него остаются прежние
+create or replace function private.guard_admin_fields()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
   if public.is_admin() then return new; end if;
   if tg_op = 'INSERT' then
-    new.data := jsonb_set(new.data, '{bonusPoints}', '0');
+    new.data := new.data || jsonb_build_object('bonusPoints', 0, 'generation', 12, 'bloodPotency', 1);
   else
-    new.data := jsonb_set(new.data, '{bonusPoints}', coalesce(old.data -> 'bonusPoints', '0'));
+    new.data := new.data || jsonb_build_object(
+      'bonusPoints', coalesce(old.data -> 'bonusPoints', '0'),
+      'generation', coalesce(old.data -> 'generation', '12'),
+      'bloodPotency', coalesce(old.data -> 'bloodPotency', '1'));
   end if;
   return new;
 end $$;
 
 drop trigger if exists characters_bonus on public.characters;
-create trigger characters_bonus
+drop function if exists private.guard_bonus_points();
+drop trigger if exists characters_admin_fields on public.characters;
+
+-- Все игроки — 12-е Поколение (13-е больше не выбирается)
+update public.characters
+set data = data || jsonb_build_object('generation', 12, 'bloodPotency', 1)
+where coalesce(data ->> 'generation', '13') = '13';
+
+create trigger characters_admin_fields
   before insert or update on public.characters
-  for each row execute function private.guard_bonus_points();
+  for each row execute function private.guard_admin_fields();
+
+-- ---------- Общие данные кампании: «Жара» Маскарада (читают все, меняет админ) ----------
+create table if not exists public.campaign (
+  id         int primary key default 1 check (id = 1),
+  heat       int not null default 0 check (heat between 0 and 5),
+  updated_at timestamptz not null default now()
+);
+insert into public.campaign (id) values (1) on conflict (id) do nothing;
+alter table public.campaign enable row level security;
+drop policy if exists "campaign: читают все вошедшие" on public.campaign;
+create policy "campaign: читают все вошедшие" on public.campaign
+  for select to authenticated using (true);
+drop policy if exists "campaign: меняет админ" on public.campaign;
+create policy "campaign: меняет админ" on public.campaign
+  for update to authenticated using ((select public.is_admin())) with check ((select public.is_admin()));
+revoke all on public.campaign from anon;
+grant select, update on public.campaign to authenticated;

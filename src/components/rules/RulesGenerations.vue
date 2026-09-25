@@ -7,9 +7,8 @@ import { GENERATIONS, BLOOD_SURGE } from "../../data/blood.js";
   <p><b>Поколение</b> — то, насколько близко вампир стоит к Каину, первому вампиру. Оно задаёт «потолок» могущества.</p>
   <p><b>Сила Крови</b> (Blood Potency) — текущая концентрация и мощь мистической крови внутри вампира.</p>
   <h3>Стартовый статус</h3>
-  <p>Персонажи начинают как <b>Неофиты</b> ({{ CONFIG.generationOptions.join("-е или ") }}-е Поколение).
-     Стартовая Сила Крови = <b>{{ CONFIG.startingBloodPotency }}</b>.
-     Максимум ПК у игроков — <b>{{ CONFIG.baseBP }}</b>, независимо от Поколения.</p>
+  <p>Персонажи начинают как <b>Неофиты {{ CONFIG.playerGeneration }}-го Поколения</b>: Сила Крови <b>{{ CONFIG.startingBloodPotency }}</b>,
+     максимум <b>{{ CONFIG.baseBP }} ПК</b>. Поколение меняет только Мастер — вместе с ним растут Сила Крови и запас ПК по таблице ниже.</p>
 
   <h3>{{ BLOOD_SURGE.name }}</h3>
   <ul>
@@ -23,12 +22,12 @@ import { GENERATIONS, BLOOD_SURGE } from "../../data/blood.js";
      до конца боя Сила 16, модификатор +3: растут урон с руки и проверки Атлетики.</p>
 
   <h3>Таблица развития</h3>
-  <p class="hint" style="margin:0 0 6px">Справка по миру: так устроены вампиры разных Поколений. На игроков лимит ПК из таблицы не действует.</p>
+  <p class="hint" style="margin:0 0 6px">Сила Крови и максимум ПК персонажа берутся из этой таблицы.</p>
   <div class="table-wrap"><table>
     <thead><tr><th>Поколение</th><th>Статус</th><th>Предел Силы Крови</th><th>Макс. ПК</th><th>Что даёт</th></tr></thead>
     <tbody>
       <tr v-for="g in GENERATIONS" :key="g.gen">
-        <td><b>{{ g.gen }}</b></td><td>{{ g.status }}</td><td>{{ g.potency }}</td><td>{{ g.maxBP }}</td><td>{{ g.bonus }}</td>
+        <td><b>{{ g.gen }}</b></td><td>{{ g.status }}</td><td>{{ g.potency ?? "Недостижимо" }}</td><td>{{ g.maxBP ?? "—" }}</td><td>{{ g.bonus }}</td>
       </tr>
     </tbody>
   </table></div>

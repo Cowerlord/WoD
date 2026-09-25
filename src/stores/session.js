@@ -5,6 +5,7 @@ import { auth } from "./auth.js";
 import { setMode } from "./ui.js";
 import { loadRoster, resetRoster, flush } from "./roster.js";
 import { loadCharacter, openOwnLast, saveCurrent } from "./editor.js";
+import { loadCampaign } from "./campaign.js";
 
 function authErrorText(err) {
   const m = String(err?.message || err || "");
@@ -22,6 +23,7 @@ async function enterApp(user) {
   auth.me = profile.data;
   if (Number.isInteger(limit.data)) auth.charLimit = limit.data;
   loadRoster(mine.data);
+  loadCampaign();
   setMode("create");
   openOwnLast();
   auth.error = "";

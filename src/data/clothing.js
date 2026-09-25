@@ -1,7 +1,7 @@
 // Стартовая одежда (шаг 4). excludeClans — кланам недоступна; stealthDC — Сложность скрытого ношения по оружию
 export const DEFAULT_CLOTHING = "casual";
 
-export const BLOOD_PACK = { dice: "1d4 − 1", text: "Пакет крови: 1d4 − 1 ПК (от 0 до 3)." };
+export const BLOOD_PACK = { dice: "1d3", text: "Пакет крови: 1d3 ПК, пьётся действием." };
 
 // Позже в игре, на старте недоступны
 export const LATER_CLOTHING = [

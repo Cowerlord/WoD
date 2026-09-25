@@ -1,6 +1,6 @@
 import { ROLL_ADVANTAGES } from "../data/disciplines.js";
 import { HEALING, MORTAL_CRIT } from "../data/combat.js";
-import { ABILITIES, CONFIG } from "../data/config.js";
+import { ABILITIES } from "../data/config.js";
 import { BLOOD_PACK } from "../data/clothing.js";
 import { discipline, abbrOf, fmt } from "../character/format.js";
 import { character, rules } from "./editor.js";
@@ -71,5 +71,20 @@ export function drinkBloodPack() {
   if (!s.packs) return;
   const res = roll({ label: "Пакет крови", onlyDamage: true, damage: BLOOD_PACK.dice, notes: ["восстановлено ПК"] });
   s.packs--;
-  s.bp = Math.min(CONFIG.baseBP, s.bp + res.total);
+  s.bp = Math.min(rules.maxBP(), s.bp + res.total);
+}
+
+// Бешенство: спасбросок ВОС, Человечность 7+ даёт +2, 9–10 — преимущество, 0–3 — помеха
+export function rollFrenzy() {
+  const f = rules.frenzy();
+  const base = modeFor({ ability: "wis" });
+  const adv = base.mode === "adv" || f.mode === "adv", dis = base.mode === "dis" || f.mode === "dis";
+  const w = woundPenalty();
+  const notes = [...base.notes];
+  const h = character.session.humanity ?? character.humanity;
+  if (f.bonus) notes.push(`+${f.bonus}: Человечность ${h}`);
+  if (f.mode === "adv") notes.push(`преимущество: Человечность ${h}`);
+  if (f.mode === "dis") notes.push(`помеха: Человечность ${h}`);
+  if (w.mod) notes.push(`${fmt(w.mod)}: ${w.why}`);
+  roll({ label: "Бешенство: спасбросок ВОС", mod: rules.mod("wis") + f.bonus + w.mod, mode: adv && !dis ? "adv" : dis && !adv ? "dis" : "normal", notes });
 }
