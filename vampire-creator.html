@@ -96,13 +96,13 @@ label.field .counter { display: block; text-align: right; font-size: .8rem; colo
 label.field .counter.full { color: var(--blood-bright); }
 label.field span { display: block; font-family: var(--font-title); font-size: .8rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 4px; }
 
-input[type=text], textarea, select {
+input[type=text], input[type=password], textarea, select {
   width: 100%;
   background: var(--bg-input); color: var(--text);
   border: 1px solid var(--border); border-radius: 4px;
   padding: 10px 12px; font: inherit;
 }
-input[type=text]:focus, textarea:focus, select:focus {
+input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus {
   outline: none; border-color: var(--blood-bright); box-shadow: 0 0 0 2px rgba(193,18,31,.25);
 }
 select option:disabled { color: #5a4a48; }
@@ -359,6 +359,35 @@ html.pdf-busy, html.pdf-busy body { overflow: hidden; }
 .roster-actions button { padding: 6px 12px; font-size: .8rem; }
 .roster-actions button.danger { border-color: #ff6b6b; color: #ffb3b3; }
 #steps li { cursor: pointer; }
+.roster-group { margin: 20px 0 0; font-family: var(--font-title); color: var(--gold); font-size: 1rem; letter-spacing: .06em; }
+.roster-count { font-family: var(--font-title); color: var(--gold); margin: 0 0 12px; }
+.notice {
+  margin: 0 0 16px; padding: 12px 14px; border: 1px dashed var(--gold); border-radius: 4px;
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+}
+.notice p { margin: 0; flex: 1 1 240px; }
+.notice button { padding: 6px 14px; font-size: .8rem; }
+
+/* Вход и пользователь */
+body.auth-on .app > :not(.app-header):not(#auth-screen), body.auth-on .modes, body.auth-on .user-bar { display: none !important; }
+body:not(.auth-on) #auth-screen { display: none !important; }
+#auth-screen { max-width: 420px; margin: 0 auto; }
+#auth-form button[type=submit] { width: 100%; margin-top: 6px; }
+.user-bar {
+  display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-top: 10px; color: var(--text-dim); font-size: .9rem;
+}
+.user-bar b { color: var(--text); font-family: var(--font-title); letter-spacing: .04em; }
+.user-bar .role { color: var(--gold); font-style: italic; }
+.user-bar button { padding: 4px 12px; font-size: .75rem; }
+.save-status.err { color: #ffb3b3; }
+.view-banner {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px;
+  padding: 10px 14px; border: 1px solid var(--gold); border-radius: 4px; background: rgba(184,155,94,.1);
+}
+.view-banner span { flex: 1 1 240px; }
+.view-banner button { padding: 6px 14px; font-size: .8rem; }
+body.readonly .steps, body.readonly .nav { display: none !important; }
 
 /* Панель шпаргалки на экране */
 #cheat-block { margin-top: 32px; }
@@ -392,7 +421,7 @@ input[type=number] {
   }
   /* Скрываем весь интерфейс, оставляем только лист */
   .app-header, .steps, .nav, .no-print, .error, button { display: none !important; }
-  body.mode-rules #mode-create, body:not(.mode-rules) #mode-rules, #mode-roster { display: none !important; }
+  body.mode-rules #mode-create, body:not(.mode-rules) #mode-rules, #mode-roster, #mode-all, #auth-screen, .user-bar, .view-banner { display: none !important; }
   /* Печать правил */
   .rules { display: block; }
   .rules-toc { display: none !important; }
@@ -428,7 +457,7 @@ input[type=number] {
 }
 </style>
 </head>
-<body>
+<body class="auth-on">
 <div class="app">
 
   <header class="app-header">
@@ -436,9 +465,36 @@ input[type=number] {
     <div class="modes" role="tablist">
       <button type="button" id="mode-btn-create" class="on">Создание персонажа</button>
       <button type="button" id="mode-btn-roster">Мои персонажи</button>
+      <button type="button" id="mode-btn-all">Все персонажи</button>
       <button type="button" id="mode-btn-rules">Правила</button>
     </div>
+    <div class="user-bar" id="user-bar">
+      <span><b id="user-name"></b> <span class="role" id="user-role"></span></span>
+      <span class="save-status" id="save-status"></span>
+      <button type="button" id="btn-logout">Выйти</button>
+    </div>
   </header>
+
+  <!-- ВХОД / РЕГИСТРАЦИЯ -->
+  <div id="auth-screen">
+    <div class="panel">
+      <h2>Вход</h2>
+      <p class="hint" id="auth-loading">Подключаюсь к серверу…</p>
+      <form id="auth-form" method="post" action="#" hidden>
+        <label class="field"><span>Ник</span>
+          <input type="text" id="auth-username" name="username" autocomplete="username"
+                 autocapitalize="none" spellcheck="false" required minlength="3" maxlength="24"
+                 placeholder="ник, который выдал Мастер">
+        </label>
+        <label class="field"><span>Пароль</span>
+          <input type="password" id="auth-password" name="password" autocomplete="current-password" required minlength="6">
+        </label>
+        <div class="error" id="err-auth"></div>
+        <button type="submit" class="primary" id="auth-submit">Войти</button>
+        <p class="hint" style="margin:14px 0 0">Нет логина или забыли пароль — спросите Мастера.</p>
+      </form>
+    </div>
+  </div>
 
   <!-- РЕЖИМ «ПРАВИЛА» (только чтение) -->
   <div id="mode-rules" hidden>
@@ -452,8 +508,14 @@ input[type=number] {
   <div id="mode-roster" hidden>
     <div class="panel">
       <h2>Мои персонажи</h2>
-      <p class="hint">Персонажи сохраняются в этом браузере автоматически. Чтобы перенести персонажа на другой компьютер
-        или отдать Мастеру — сохраните его в файл и загрузите там через «Импорт».</p>
+      <p class="hint">Персонажи сохраняются на сервере автоматически и доступны с любого устройства после входа.
+        Файл — запасная копия или способ передать персонажа без аккаунта.</p>
+      <p class="roster-count" id="roster-count"></p>
+      <div class="notice" id="legacy-box" hidden>
+        <p id="legacy-text"></p>
+        <button type="button" class="primary" id="btn-legacy-move">Перенести в аккаунт</button>
+        <button type="button" id="btn-legacy-drop">Удалить с устройства</button>
+      </div>
       <div class="export-row">
         <button type="button" class="primary" id="btn-new-char">+ Новый персонаж</button>
         <button type="button" id="btn-import">📂 Импорт из файла</button>
@@ -464,8 +526,23 @@ input[type=number] {
     </div>
   </div>
 
+  <!-- РЕЖИМ «ВСЕ ПЕРСОНАЖИ» -->
+  <div id="mode-all" hidden>
+    <div class="panel">
+      <h2>Все персонажи</h2>
+      <p class="hint" id="all-hint">Персонажи других игроков — только для просмотра.</p>
+      <div class="error" id="err-all"></div>
+      <div id="all-list"></div>
+    </div>
+  </div>
+
   <!-- РЕЖИМ «СОЗДАНИЕ» -->
   <div id="mode-create">
+
+  <div class="view-banner" id="view-banner" hidden>
+    <span id="view-text"></span>
+    <button type="button" id="btn-view-close">← К списку</button>
+  </div>
 
   <ol class="steps" id="steps">
     <li>Клан</li>
@@ -603,6 +680,8 @@ input[type=number] {
 
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js"
+        integrity="sha384-WgXwGL6fUsYJWNaKJgVbrJKGRQwc1vieh2oy4kw9nXqpNDz3tdSsqEYUgeHD/NuF" crossorigin="anonymous"></script>
 <script>
 /* =========================================================
    ДАННЫЕ — ЗАПОЛНИТЕ ЛОРОМ
@@ -2031,31 +2110,44 @@ $("#avatar-file").addEventListener("change", async e => {
 });
 
 /* =========================================================
-   СОХРАНЕНИЕ, ЭКСПОРТ И ИМПОРТ
-   Все персонажи хранятся в localStorage этого браузера; файл — для переноса.
+   СЕРВЕР, СОХРАНЕНИЕ, ЭКСПОРТ И ИМПОРТ
+   Персонажи хранятся в Supabase (схема и права — supabase/schema.sql): права проверяет сама база,
+   поэтому обойти их из консоли браузера нельзя. Файл — запасная копия и перенос без аккаунта.
    ========================================================= */
-const STORAGE_KEY = "vtm-roster-v1";
+const SUPABASE_URL = "https://buvvkcrctqexempzcmus.supabase.co";
+const SUPABASE_KEY = "sb_publishable_5voLV8TOWyNO5tkx7pV6Ng_kGU_BaKD";   // publishable (anon) ключ — публичный, данные защищают политики RLS
+const LOGIN_DOMAIN = "players.wod.local";        // ник → служебный email (как в private.create_player)
+const USERNAME_RE = /^[a-z0-9_.-]{3,24}$/;
+const LEGACY_KEY = "vtm-roster-v1";              // персонажи из версии без аккаунтов (localStorage)
 const FILE_FORMAT = "vtm-character";
 const AVATAR_RE = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 
-let storageOk = true;
-function loadRoster() {
-  try {
-    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (data && typeof data === "object" && data.characters && typeof data.characters === "object") return data;
-  } catch { storageOk = false; }
-  return { characters: {}, lastId: null };
-}
-let roster = loadRoster();
+let sb = null;                       // клиент Supabase
+let me = null;                       // { id, username, role }
+let charLimit = 10;                  // уточняется с сервера
+const roster = { characters: {} };   // мои персонажи: id → данные в формате serialize()
+const knownOnServer = new Set();     // id персонажей, которые уже созданы на сервере
+const lastSnap = new Map();          // id → снимок последней отправленной версии (не шлём одно и то же)
+const rejected = new Set();          // новые персонажи, которых сервер не принял из-за лимита
+let current = { ownerId: null, ownerName: "", readOnly: false };   // чей персонаж открыт в мастере
 
-function persistRoster() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(roster)); storageOk = true; }
-  catch { storageOk = false; }
+const isAdmin = () => me?.role === "admin";
+const myCount = () => Object.keys(roster.characters).length;
+const nowIso = () => new Date().toISOString();
+// Шаг и дата не считаются изменением: просмотр листа не должен перезаписывать персонажа
+const snapshot = d => JSON.stringify({ ...d, step: null, updatedAt: null });
+
+function lsGet(key) { try { return JSON.parse(localStorage.getItem(key) || "null"); } catch { return null; } }
+function lsSet(key, val) {
+  try { if (val == null) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(val)); }
+  catch { /* приватный режим или нет места — не критично */ }
 }
+const lastKey = () => `vtm-last-${me.id}`;
+const outboxKey = () => `vtm-outbox-${me.id}`;
 
 function serialize() {
   const { currentHP, ...data } = state;
-  return { format: FILE_FORMAT, version: 1, ...structuredClone(data), updatedAt: new Date().toISOString() };
+  return { format: FILE_FORMAT, version: 1, ...structuredClone(data), updatedAt: nowIso() };
 }
 
 // Данные из файла или хранилища проверяются и чистятся поле за полем
@@ -2091,14 +2183,108 @@ function sanitizeCharacter(d) {
   return out;
 }
 
-// Автосохранение текущего персонажа (пустой черновик без имени и клана не сохраняется)
+/* ---------- Ошибки сервера ---------- */
+function describeError(err) {
+  const m = String(err?.message || "");
+  if (m.includes("CHARACTER_LIMIT")) return `лимит — ${charLimit} персонажей на аккаунт`;
+  if (err?.code === "GONE") return "персонаж удалён с сервера";
+  if (err?.code === "42501") return "нет прав";
+  if (err?.code === "23514") return "данные не прошли проверку (слишком большой портрет?)";
+  if (/fetch|network|load failed/i.test(m)) return "нет связи с сервером";
+  return m || "неизвестная ошибка";
+}
+// Ошибки базы (SQLSTATE из 5 символов) повторять бессмысленно; сеть и прочее — повторяем
+const isRetryable = err => err?.code !== "GONE" && !/^[0-9A-Z]{5}$/.test(err?.code || "");
+
+function setSaveStatus(kind, msg = "") {
+  const el = $("#save-status");
+  el.classList.toggle("err", kind === "error");
+  el.textContent = { idle: "", saving: "Сохраняю…", saved: "✓ Сохранено", error: `⚠ ${msg}` }[kind];
+}
+
+/* ---------- Очередь отправки ----------
+   Копится последняя версия каждого персонажа, версии уходят на сервер по одной.
+   Очередь дублируется в localStorage: если вкладку закрыли до отправки, она уйдёт при следующем входе. */
+const outbox = new Map();            // id → { data, ownerId }
+let flushRun = null, retryTimer = null;
+
+function backupOutbox() { if (me) lsSet(outboxKey(), outbox.size ? [...outbox.values()] : null); }
+
+function queueSave(data, ownerId) {
+  outbox.set(data.id, { data, ownerId });
+  backupOutbox();
+  flush();
+}
+
+async function sendCharacter(item, retried = false) {
+  const { data, ownerId } = item;
+  const row = { name: data.name, clan_id: data.clanId, data };
+  if (knownOnServer.has(data.id)) {
+    const { data: rows, error } = await sb.from("characters").update(row).eq("id", data.id).select("id");
+    if (error) return error;
+    if (rows.length) return null;
+    knownOnServer.delete(data.id);             // на сервере его уже нет (удалили в другой вкладке или админ)
+    if (ownerId !== me.id) return { code: "GONE" };
+  }
+  const { error } = await sb.from("characters").insert({ id: data.id, ...row });
+  if (error?.code === "23505" && !retried) {   // уже создан (с другого устройства) — обновляем
+    knownOnServer.add(data.id);
+    return sendCharacter(item, true);
+  }
+  if (!error) knownOnServer.add(data.id);
+  return error;
+}
+
+function onSaveRejected({ data, ownerId }, err) {
+  lastSnap.delete(data.id);
+  if (ownerId === me.id && !knownOnServer.has(data.id)) {
+    delete roster.characters[data.id];
+    if (String(err?.message).includes("CHARACTER_LIMIT")) rejected.add(data.id);
+  }
+  if (state.id === data.id) showError(state.step, `Персонаж не сохранён на сервере: ${describeError(err)}.`);
+}
+
+function flush() {
+  flushRun ??= (async () => {
+    clearTimeout(retryTimer);
+    let failed = null;
+    while (outbox.size && me) {
+      const [id, item] = outbox.entries().next().value;
+      setSaveStatus("saving");
+      const err = await sendCharacter(item).catch(e => e);
+      if (!me) break;                                    // вышли из аккаунта во время отправки
+      if (err && isRetryable(err)) { failed = err; break; }   // версия остаётся в очереди
+      if (outbox.get(id) === item) outbox.delete(id);   // пока отправляли, могла появиться новая версия
+      if (err) { failed = err; onSaveRejected(item, err); }
+    }
+    backupOutbox();
+    if (!me) return;
+    if (!failed) setSaveStatus("saved");
+    else if (isRetryable(failed)) { setSaveStatus("error", "нет связи, повторю…"); retryTimer = setTimeout(flush, 5000); }
+    else setSaveStatus("error", `не сохранено: ${describeError(failed)}`);
+  })().finally(() => { flushRun = null; });
+  return flushRun;
+}
+
+/* ---------- Автосохранение текущего персонажа ----------
+   Пустой черновик без имени и клана не сохраняется; чужого персонажа сохраняет только админ. */
 let saveTimer = null;
 function saveCurrent() {
   clearTimeout(saveTimer);
+  if (!me || current.readOnly) return;
   if (!state.name && !state.clanId) return;
-  roster.characters[state.id] = serialize();
-  roster.lastId = state.id;
-  persistRoster();
+  const data = serialize();
+  const snap = snapshot(data);
+  if (lastSnap.get(data.id) === snap) return;
+  const mine = current.ownerId === me.id;
+  if (mine && !roster.characters[data.id] && (myCount() >= charLimit || rejected.has(data.id))) {
+    showError(state.step, `Лимит — ${charLimit} персонажей на аккаунт, этот персонаж не сохранится. ` +
+      "Освободите место в «Мои персонажи».");
+    return;
+  }
+  if (mine) { roster.characters[data.id] = data; lsSet(lastKey(), data.id); }
+  lastSnap.set(data.id, snap);
+  queueSave(data, current.ownerId);
 }
 function scheduleSave() {
   clearTimeout(saveTimer);
@@ -2107,6 +2293,7 @@ function scheduleSave() {
 ["input", "change", "click"].forEach(type =>
   $("#mode-create").addEventListener(type, scheduleSave));
 window.addEventListener("pagehide", saveCurrent);
+document.addEventListener("visibilitychange", () => { if (document.hidden) saveCurrent(); });
 
 // Перенос данных персонажа в интерфейс
 function syncInputs() {
@@ -2122,9 +2309,22 @@ function syncInputs() {
   renderAvatar();
 }
 
-function loadCharacter(data) {
+// owner — чей персонаж (по умолчанию свой); readOnly — чужой, только просмотр
+function loadCharacter(data, owner) {
   Object.assign(state, data, { currentHP: null });
+  current = owner ?? { ownerId: me?.id ?? null, ownerName: me?.username ?? "", readOnly: false };
+  lastSnap.set(state.id, snapshot(serialize()));
   syncInputs();
+  renderViewBanner();
+}
+
+function renderViewBanner() {
+  const other = !!me && !!current.ownerId && current.ownerId !== me.id;
+  document.body.classList.toggle("readonly", current.readOnly);
+  $("#view-banner").hidden = !other;
+  $("#view-text").innerHTML = !other ? "" : current.readOnly
+    ? `Персонаж игрока <b>${esc(current.ownerName)}</b> — только просмотр.`
+    : `Вы редактируете персонажа игрока <b>${esc(current.ownerName)}</b> как админ. Изменения сохраняются автоматически.`;
 }
 
 // Первый шаг, который не проходит проверку (или null, если персонаж готов)
@@ -2144,8 +2344,22 @@ function openCharacter(id, where) {
   goTo(where === "sheet" ? (firstInvalidStep() ?? TOTAL_STEPS) : 1);
 }
 
+// Последний свой персонаж (или пустой черновик)
+function openOwnLast() {
+  const last = roster.characters[lsGet(lastKey())];
+  let data = null;
+  try { data = last ? sanitizeCharacter(last) : null; } catch { data = null; }
+  loadCharacter(data || blankCharacter());
+  goTo(data ? Math.min(data.step, firstInvalidStep() ?? TOTAL_STEPS) : 1);
+}
+
 function startNewCharacter() {
   saveCurrent();
+  if (myCount() >= charLimit) {
+    setMode("roster");
+    $("#err-roster").textContent = `Лимит — ${charLimit} персонажей на аккаунт. Удалите кого-нибудь, чтобы создать нового.`;
+    return;
+  }
   loadCharacter(blankCharacter());
   setMode("create");
   goTo(1);
@@ -2167,27 +2381,56 @@ function exportCharacter(data) {
 
 const fmtDate = iso => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" }); };
 
+// Карточка персонажа в списке; actions — [act, подпись, класс?]
+function characterCard(ch, actions) {
+  const cl = CLANS.find(x => x.id === ch.clanId);
+  const ava = typeof ch.avatar === "string" && AVATAR_RE.test(ch.avatar) ? `background-image:url('${ch.avatar}')` : "";
+  return `
+    <div class="roster-card" data-id="${esc(ch.id)}">
+      <div class="roster-ava" style="${ava}"></div>
+      <div class="roster-info"><b>${esc(ch.name) || "Безымянный"}</b>
+        <small>${esc(cl?.name ?? "клан не выбран")}${ch.updatedAt ? ` · ${esc(fmtDate(ch.updatedAt))}` : ""}</small></div>
+      <div class="roster-actions">${actions.map(([act, label, cls]) =>
+        `<button type="button" data-act="${act}"${cls ? ` class="${cls}"` : ""}>${label}</button>`).join("")}</div>
+    </div>`;
+}
+
+// Опасные кнопки срабатывают со второго нажатия
+function confirmClick(btn, label) {
+  if (btn.dataset.confirm === "1") return true;
+  btn.dataset.confirm = "1";
+  btn.textContent = "Точно?";
+  setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = label; } }, 3000);
+  return false;
+}
+
+/* ---------- «Мои персонажи» ---------- */
 function renderRoster() {
+  const n = myCount();
+  $("#roster-count").textContent = `Персонажей: ${n} из ${charLimit}`;
+  $("#btn-new-char").disabled = $("#btn-import").disabled = n >= charLimit;
   const list = Object.values(roster.characters)
     .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
-  $("#roster-list").innerHTML = list.length ? list.map(ch => {
-    const cl = CLANS.find(x => x.id === ch.clanId);
-    const ava = typeof ch.avatar === "string" && AVATAR_RE.test(ch.avatar) ? `background-image:url('${ch.avatar}')` : "";
-    return `
-      <div class="roster-card" data-id="${esc(ch.id)}">
-        <div class="roster-ava" style="${ava}"></div>
-        <div class="roster-info"><b>${esc(ch.name) || "Безымянный"}</b>
-          <small>${esc(cl?.name ?? "клан не выбран")}${ch.updatedAt ? ` · ${esc(fmtDate(ch.updatedAt))}` : ""}</small></div>
-        <div class="roster-actions">
-          <button type="button" data-act="sheet">Лист</button>
-          <button type="button" data-act="edit">Изменить</button>
-          <button type="button" data-act="export">💾 В файл</button>
-          <button type="button" data-act="delete" class="danger">Удалить</button>
-        </div>
-      </div>`;
-  }).join("") : `<p class="hint">Пока нет сохранённых персонажей.</p>`;
-  $("#err-roster").textContent = storageOk ? "" :
-    "Браузер не даёт сохранять данные (приватный режим?). Сохраняйте персонажей в файл.";
+  $("#roster-list").innerHTML = list.length ? list.map(ch => characterCard(ch, [
+    ["sheet", "Лист"], ["edit", "Изменить"], ["export", "💾 В файл"], ["delete", "Удалить", "danger"],
+  ])).join("") : `<p class="hint">Пока нет сохранённых персонажей.</p>`;
+  renderLegacy();
+}
+
+async function deleteMine(id) {
+  outbox.delete(id);
+  backupOutbox();
+  if (knownOnServer.has(id)) {
+    const { error } = await sb.from("characters").delete().eq("id", id);
+    if (error) { $("#err-roster").textContent = `Не удалось удалить: ${describeError(error)}.`; return; }
+    knownOnServer.delete(id);
+  }
+  delete roster.characters[id];
+  lastSnap.delete(id);
+  rejected.clear();                                  // место освободилось
+  if (lsGet(lastKey()) === id) lsSet(lastKey(), null);
+  if (state.id === id) loadCharacter(blankCharacter());
+  renderRoster();
 }
 
 $("#roster-list").addEventListener("click", e => {
@@ -2195,24 +2438,22 @@ $("#roster-list").addEventListener("click", e => {
   if (!btn) return;
   const id = btn.closest(".roster-card").dataset.id;
   const act = btn.dataset.act;
+  $("#err-roster").textContent = "";
   if (act === "sheet" || act === "edit") openCharacter(id, act);
   if (act === "export") {
     try { exportCharacter(sanitizeCharacter(roster.characters[id])); } catch { /* повреждённая запись */ }
   }
-  if (act === "delete") {
-    if (btn.dataset.confirm !== "1") {                 // удаление в два нажатия
-      btn.dataset.confirm = "1";
-      btn.textContent = "Точно удалить?";
-      setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "Удалить"; } }, 3000);
-      return;
-    }
-    delete roster.characters[id];
-    if (roster.lastId === id) roster.lastId = null;
-    persistRoster();
-    if (state.id === id) loadCharacter(blankCharacter());
-    renderRoster();
-  }
+  if (act === "delete" && confirmClick(btn, "Удалить")) deleteMine(id);
 });
+
+// Добавить своего персонажа (импорт, перенос) — всегда с новым id, чтобы не пересечься с чужими
+function addMine(data, updatedAt = nowIso()) {
+  const saved = { format: FILE_FORMAT, version: 1, ...data, id: newId(), updatedAt };
+  roster.characters[saved.id] = saved;
+  lastSnap.set(saved.id, snapshot(saved));
+  queueSave(saved, me.id);
+  return saved.id;
+}
 
 $("#btn-new-char").addEventListener("click", startNewCharacter);
 $("#btn-import").addEventListener("click", () => $("#import-file").click());
@@ -2223,15 +2464,203 @@ $("#import-file").addEventListener("change", async e => {
   try {
     if (file.size > 6 * 1024 * 1024) throw new Error("Файл слишком большой.");
     const data = sanitizeCharacter(JSON.parse(await file.text()));
-    if (roster.characters[data.id]) data.id = newId();   // не перезаписываем существующего — импорт создаёт копию
-    roster.characters[data.id] = { format: FILE_FORMAT, version: 1, ...data, updatedAt: new Date().toISOString() };
-    persistRoster();
-    openCharacter(data.id, "sheet");
+    if (myCount() >= charLimit) throw new Error(`лимит — ${charLimit} персонажей на аккаунт.`);
+    openCharacter(addMine(data), "sheet");
   } catch (err) {
     $("#err-roster").textContent = `Не удалось загрузить: ${err instanceof SyntaxError ? "файл повреждён." : err.message}`;
   }
 });
 $("#btn-export").addEventListener("click", () => { saveCurrent(); exportCharacter(serialize()); });
+
+// Персонажи, оставшиеся в браузере от версии без аккаунтов
+function legacyCharacters() {
+  const d = lsGet(LEGACY_KEY);
+  return d && d.characters && typeof d.characters === "object" ? Object.values(d.characters) : [];
+}
+function renderLegacy() {
+  const n = legacyCharacters().length;
+  $("#legacy-box").hidden = !n;
+  $("#legacy-text").textContent = `В этом браузере остались персонажи из версии без аккаунтов: ${n}. Перенести их в ваш аккаунт?`;
+}
+$("#btn-legacy-move").addEventListener("click", () => {
+  const left = [];
+  let moved = 0;
+  for (const raw of legacyCharacters()) {
+    let data;
+    try { data = sanitizeCharacter(raw); } catch { continue; }     // повреждённые записи пропускаем
+    if (myCount() >= charLimit) { left.push(raw); continue; }
+    addMine(data, typeof raw.updatedAt === "string" ? raw.updatedAt : nowIso());
+    moved++;
+  }
+  lsSet(LEGACY_KEY, left.length ? { characters: Object.fromEntries(left.map(c => [c.id, c])), lastId: null } : null);
+  renderRoster();
+  $("#err-roster").textContent = left.length
+    ? `Перенесено: ${moved}. Не поместились из-за лимита: ${left.length} — освободите место и нажмите «Перенести» ещё раз.`
+    : "";
+});
+$("#btn-legacy-drop").addEventListener("click", e => {
+  if (!confirmClick(e.target, "Удалить с устройства")) return;
+  lsSet(LEGACY_KEY, null);
+  renderLegacy();
+});
+
+/* ---------- «Все персонажи» (чужие) ---------- */
+async function renderAll() {
+  $("#err-all").textContent = "";
+  $("#all-hint").textContent = isAdmin()
+    ? "Вы админ: можете открыть, изменить или удалить любого персонажа."
+    : "Персонажи других игроков — только для просмотра.";
+  $("#all-list").innerHTML = `<p class="hint">Загрузка…</p>`;
+  const { data, error } = await sb.from("characters")
+    .select("id, owner_id, name, clan_id, updated_at, avatar:data->>avatar, owner:profiles(username)")
+    .neq("owner_id", me.id)
+    .order("updated_at", { ascending: false });
+  if (error) {
+    $("#all-list").innerHTML = "";
+    $("#err-all").textContent = `Не удалось загрузить: ${describeError(error)}.`;
+    return;
+  }
+  const groups = new Map();
+  for (const r of data) {
+    const owner = r.owner?.username ?? "?";
+    if (!groups.has(owner)) groups.set(owner, []);
+    groups.get(owner).push({ id: r.id, name: r.name, clanId: r.clan_id, updatedAt: r.updated_at, avatar: r.avatar });
+  }
+  const actions = [["sheet", "Лист"], ...(isAdmin() ? [["edit", "Изменить"], ["delete", "Удалить", "danger"]] : [])];
+  $("#all-list").innerHTML = groups.size
+    ? [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([owner, list]) => `
+        <h3 class="roster-group">${esc(owner)}</h3>
+        <div class="roster">${list.map(ch => characterCard(ch, actions)).join("")}</div>`).join("")
+    : `<p class="hint">У других игроков пока нет персонажей.</p>`;
+}
+
+async function openOther(id, where) {
+  const { data: row, error } = await sb.from("characters")
+    .select("id, owner_id, data, owner:profiles(username)").eq("id", id).maybeSingle();
+  if (error || !row) { $("#err-all").textContent = error ? `Не удалось открыть: ${describeError(error)}.` : "Персонаж уже удалён."; return; }
+  let data;
+  try { data = sanitizeCharacter({ format: FILE_FORMAT, ...row.data, id: row.id }); }
+  catch { $("#err-all").textContent = "Персонаж повреждён."; return; }
+  saveCurrent();
+  const editable = isAdmin() && where === "edit";
+  knownOnServer.add(row.id);
+  loadCharacter(data, { ownerId: row.owner_id, ownerName: row.owner?.username ?? "?", readOnly: !editable });
+  setMode("create");
+  goTo(editable ? 1 : TOTAL_STEPS);
+}
+
+$("#all-list").addEventListener("click", async e => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const id = btn.closest(".roster-card").dataset.id;
+  const act = btn.dataset.act;
+  $("#err-all").textContent = "";
+  if (act === "sheet" || act === "edit") openOther(id, act);
+  if (act === "delete" && confirmClick(btn, "Удалить")) {
+    const { data, error } = await sb.from("characters").delete().eq("id", id).select("id");
+    if (error || !data.length) { $("#err-all").textContent = `Не удалось удалить: ${error ? describeError(error) : "нет прав"}.`; return; }
+    outbox.delete(id);
+    knownOnServer.delete(id);
+    if (state.id === id) openOwnLast();
+    renderAll();
+  }
+});
+
+$("#btn-view-close").addEventListener("click", () => {
+  saveCurrent();
+  openOwnLast();
+  setMode("all");
+});
+
+/* =========================================================
+   ВХОД
+   Регистрации нет — аккаунты создаёт админ (supabase/schema.sql, private.create_player).
+   Настоящая <form> с autocomplete="username"/"current-password": браузер предложит
+   сохранить пароль и дальше подставит его сам. Сессия хранится в браузере и продлевается
+   автоматически — вход нужен только после «Выйти» или на новом устройстве.
+   ========================================================= */
+function showAuth(message = "") {
+  document.body.classList.add("auth-on");
+  $("#auth-loading").hidden = true;
+  $("#auth-form").hidden = false;
+  $("#err-auth").textContent = message;
+}
+
+function authErrorText(err) {
+  const m = String(err?.message || err || "");
+  const code = err?.code;
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(m)) return "Неверный ник или пароль.";
+  if (/rate limit/i.test(m) || String(code).startsWith("over_")) return "Слишком много попыток — подождите пару минут.";
+  if (/fetch|network|load failed/i.test(m)) return "Нет связи с сервером. Проверьте интернет.";
+  return `Ошибка: ${m}`;
+}
+
+$("#auth-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const username = $("#auth-username").value.trim().toLowerCase();
+  const password = $("#auth-password").value;
+  if (!USERNAME_RE.test(username) || password.length < 6) { showAuth("Неверный ник или пароль."); return; }
+  const btn = $("#auth-submit");
+  btn.disabled = true;
+  $("#err-auth").textContent = "";
+  try {
+    const res = await sb.auth.signInWithPassword({ email: `${username}@${LOGIN_DOMAIN}`, password });
+    if (res.error) throw res.error;
+    await enterApp(res.data.user);
+  } catch (err) {
+    $("#err-auth").textContent = authErrorText(err);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// После входа: профиль, лимит, свои персонажи, неотправленная очередь с прошлого раза
+async function enterApp(user) {
+  const [prof, lim, chars] = await Promise.all([
+    sb.from("profiles").select("id, username, role").eq("id", user.id).single(),
+    sb.rpc("character_limit"),
+    sb.from("characters").select("id, data, updated_at").eq("owner_id", user.id),
+  ]);
+  if (prof.error) throw prof.error;
+  if (chars.error) throw chars.error;
+  me = prof.data;
+  if (Number.isInteger(lim.data)) charLimit = lim.data;
+  roster.characters = {};
+  for (const row of chars.data) {
+    roster.characters[row.id] = { format: FILE_FORMAT, version: 1, ...row.data, id: row.id, updatedAt: row.updated_at };
+    knownOnServer.add(row.id);
+  }
+  for (const item of lsGet(outboxKey()) || []) {
+    if (!item?.data?.id) continue;
+    if (item.ownerId === me.id) roster.characters[item.data.id] = item.data;
+    outbox.set(item.data.id, item);
+  }
+  $("#user-name").textContent = me.username;
+  $("#user-role").textContent = isAdmin() ? "· админ" : "";
+  setSaveStatus("idle");
+  document.body.classList.remove("auth-on");
+  setMode("create");
+  openOwnLast();
+  if (outbox.size) flush();
+}
+
+function resetSession() {
+  clearTimeout(retryTimer);
+  me = null;
+  roster.characters = {};
+  [knownOnServer, lastSnap, rejected, outbox].forEach(x => x.clear());
+  loadCharacter(blankCharacter());
+  setSaveStatus("idle");
+  $("#auth-password").value = "";
+  showAuth();
+}
+
+$("#btn-logout").addEventListener("click", async () => {
+  saveCurrent();
+  await flush();                     // что не ушло — останется в очереди этого браузера до следующего входа
+  await sb.auth.signOut({ scope: "local" });
+  if (me) resetSession();
+});
 
 /* =========================================================
    НАВИГАЦИЯ
@@ -2432,13 +2861,14 @@ function renderRules() {
 
 function setMode(mode, sectionId) {
   document.body.classList.toggle("mode-rules", mode === "rules");
-  for (const m of ["create", "roster", "rules"]) {
+  for (const m of ["create", "roster", "all", "rules"]) {
     $(`#mode-${m}`).hidden = m !== mode;
     $(`#mode-btn-${m}`).classList.toggle("on", m === mode);
   }
-  if (mode === "roster") {
+  if (mode === "roster" || mode === "all") {
     saveCurrent();
-    renderRoster();
+    $("#err-roster").textContent = "";
+    if (mode === "roster") renderRoster(); else renderAll();
     window.scrollTo({ top: 0 });
   }
   if (mode === "rules") {
@@ -2452,6 +2882,7 @@ function setMode(mode, sectionId) {
 $("#mode-btn-create").addEventListener("click", () => setMode("create"));
 $("#mode-btn-rules").addEventListener("click", () => setMode("rules"));
 $("#mode-btn-roster").addEventListener("click", () => setMode("roster"));
+$("#mode-btn-all").addEventListener("click", () => setMode("all"));
 document.addEventListener("click", e => {
   const link = e.target.closest(".rule-link");
   if (link) setMode("rules", link.dataset.rule);
@@ -2466,13 +2897,25 @@ $("#rules-toc").addEventListener("click", e => {
 // При печати с любого шага (Ctrl+P) лист всё равно актуален
 window.addEventListener("beforeprint", () => { renderSheet(); renderCheat(); });
 
-// Старт: продолжаем последнего персонажа, если он есть
-(function init() {
-  const last = roster.lastId && roster.characters[roster.lastId];
-  let data = null;
-  try { data = last ? sanitizeCharacter(last) : null; } catch { data = null; }
-  loadCharacter(data || blankCharacter());
-  goTo(data ? Math.min(data.step, firstInvalidStep() ?? TOTAL_STEPS) : 1);
+// Старт: пустой мастер за экраном входа; если сессия сохранена — входим сразу
+(async function init() {
+  loadCharacter(blankCharacter());
+  goTo(1);
+  if (!window.supabase?.createClient) {
+    showAuth();
+    $("#auth-form").hidden = true;
+    $("#auth-loading").hidden = false;
+    $("#auth-loading").textContent = "Не удалось загрузить модуль входа: нет интернета или его блокирует браузер. Обновите страницу.";
+    return;
+  }
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  sb.auth.onAuthStateChange(event => {          // выход в другой вкладке или отозванная сессия
+    if (event === "SIGNED_OUT" && me) setTimeout(resetSession);
+  });
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { showAuth(); return; }
+  try { await enterApp(session.user); }
+  catch (err) { showAuth(authErrorText(err)); }
 })();
 </script>
 </body>
