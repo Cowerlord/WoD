@@ -141,3 +141,6 @@ input[type=number] {
 
 .lvl-n { display: inline-block; min-width: 3.2em; font-family: var(--font-title); font-size: .75rem; color: var(--blood-bright); }
 p.lvl.not-owned { opacity: .4; }
+
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
