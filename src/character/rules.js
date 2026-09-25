@@ -2,7 +2,8 @@ import { CONFIG, TOTAL_STEPS } from "../data/config.js";
 import { CLANS } from "../data/clans.js";
 import { DISCIPLINE_PASSIVES, SAVE_DC } from "../data/disciplines.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
-import { WEAPONS, MASTERY } from "../data/weapons.js";
+import { WEAPONS, MASTERY, STEALTH_DC } from "../data/weapons.js";
+import { CLOTHING } from "../data/clothing.js";
 import { ARMOR } from "../data/armor.js";
 import { HEALING, WOUND_STAGES } from "../data/combat.js";
 import { modOf, fmt, abbrOf, discipline, stageForHP } from "./format.js";
@@ -25,6 +26,9 @@ export function characterRules(ch) {
   const clan = () => CLANS.find(c => c.id === ch.clanId) || null;
   const weapon = () => WEAPONS.find(w => w.id === ch.weaponId) || null;
   const armor = () => ARMOR.find(a => a.id === ch.armorId) || null;
+  const clothing = () => CLOTHING.find(c => c.id === ch.clothingId) || null;
+  const clothingAllowed = c => !c.excludeClans?.includes(ch.clanId);
+  const stealthDC = () => clothing()?.stealthDC?.[ch.weaponId] ?? STEALTH_DC;
 
   const discLevel = id => ch.disciplines[id] || 0;
   const hasDisc = (id, level = 1) => discLevel(id) >= level;
@@ -132,7 +136,11 @@ export function characterRules(ch) {
       if (SKILL_PICKS.some(p => !ch.skills[p.key])) return "Выберите оба навыка: на +2 и на +1.";
       return "";
     },
-    4() { return ch.weaponId ? "" : "Выберите оружие."; },
+    4() {
+      if (!ch.weaponId) return "Выберите оружие.";
+      if (!clothing() || !clothingAllowed(clothing())) return "Выберите одежду, доступную вашему клану.";
+      return "";
+    },
     5() { return ""; },
   };
 
@@ -142,7 +150,7 @@ export function characterRules(ch) {
   }
 
   return {
-    mod, clan, weapon, armor,
+    mod, clan, weapon, armor, clothing, clothingAllowed, stealthDC,
     discLevel, hasDisc, learnedDisciplines, pointsSpent, pointsBudget, passiveNote,
     clanSkillId, skillAllowed, skillBonus,
     combatStats, fillTokens, saveDCs,

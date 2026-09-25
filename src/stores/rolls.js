@@ -1,8 +1,9 @@
 import { ROLL_ADVANTAGES } from "../data/disciplines.js";
-import { HEALING } from "../data/combat.js";
-import { ABILITIES } from "../data/config.js";
+import { HEALING, MORTAL_CRIT } from "../data/combat.js";
+import { ABILITIES, CONFIG } from "../data/config.js";
+import { BLOOD_PACK } from "../data/clothing.js";
 import { discipline, abbrOf, fmt } from "../character/format.js";
-import { rules } from "./editor.js";
+import { character, rules } from "./editor.js";
 import { roll } from "./dice.js";
 
 // Преимущество и помеха по правилам: дисциплины, тяжёлая броня, ранения. Друг друга гасят.
@@ -43,7 +44,7 @@ export const rollSkill = sk => check(sk.name, rules.mod(sk.ability) + rules.skil
 
 export const rollInitiative = () => check("Инициатива", rules.combatStats().init, { initiative: true });
 
-export const rollStealth = () => check("Скрытое ношение", rules.stealthRoll(), { ability: "dex", skill: "stealth" });
+export const rollStealth = () => check("Скрытое ношение", rules.stealthRoll(), { ability: "dex", skill: "stealth" }, { target: rules.stealthDC() });
 
 export const rollSave = (key, label = `Спасбросок ${abbrOf(key)}`) => check(label, rules.mod(key), { ability: key });
 
@@ -56,9 +57,19 @@ export function rollAttack(a) {
     roll({ label, onlyDamage: true, damage: st.damage, notes: [`цель: спасбросок ${abbrOf(a.save)}, Сл. ${rules.saveDCof(a)}`] });
     return;
   }
-  check(label, Number(st.attack.replace("−", "-")), { attack: true }, { damage: st.damage });
+  const extra = { damage: st.damage };
+  if (a.mortalCrit) extra.critNote = `По смертному: ${MORTAL_CRIT}.`;
+  check(label, Number(st.attack.replace("−", "-")), { attack: true }, extra);
 }
 
 export const rollDamageOnly = a => roll({ label: `Урон: ${a.name.replace(/\s*\(.*\)$/, "")}`, onlyDamage: true, damage: rules.weaponStats(a).damage });
 
 export const rollHeal = () => roll({ label: "Лечение", onlyDamage: true, damage: rules.healAmount(), notes: [`${HEALING.cost}, восстановить HP`] });
+
+export function drinkBloodPack() {
+  const s = character.session;
+  if (!s.packs) return;
+  const res = roll({ label: "Пакет крови", onlyDamage: true, damage: BLOOD_PACK.dice, notes: ["восстановлено ПК"] });
+  s.packs--;
+  s.bp = Math.min(CONFIG.baseBP, s.bp + res.total);
+}

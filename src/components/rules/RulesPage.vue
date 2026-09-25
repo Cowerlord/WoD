@@ -10,6 +10,7 @@ import RulesFeeding from "./RulesFeeding.vue";
 import RulesBeast from "./RulesBeast.vue";
 import RulesSkills from "./RulesSkills.vue";
 import RulesArmor from "./RulesArmor.vue";
+import RulesClothing from "./RulesClothing.vue";
 import RulesHumanity from "./RulesHumanity.vue";
 import RulesGenerations from "./RulesGenerations.vue";
 
@@ -23,6 +24,7 @@ const sections = [
   { id: "beast", title: "Зверь и Узы Крови", component: RulesBeast },
   { id: "skills", title: "Навыки", component: RulesSkills },
   { id: "armor", title: "Броня", component: RulesArmor },
+  { id: "clothing", title: "Одежда", component: RulesClothing },
   { id: "humanity", title: "Человечность", component: RulesHumanity },
   { id: "generations", title: "Поколение и Сила Крови", component: RulesGenerations },
 ];

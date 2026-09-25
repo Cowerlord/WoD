@@ -9,6 +9,7 @@ export const MASTERY = {
 
 export const UNARMED_ID = "none";
 
+// mortalCrit — крит по смертному вызывает Кровотечение или Отсечение конечности
 // kind: melee — d20 + мастерство, ranged — d20 + ЛОВ + мастерство; addMod: false — без мода к урону; upgrades — кость урона от дисциплины
 
 export const WEAPONS = [
@@ -39,6 +40,7 @@ export const WEAPONS = [
     type: "Колющий (физ.)",
     distance: [2, 3],
     concealable: true,
+    mortalCrit: true,
     stealth: `Проверка Ловкости (Скрытность) против Восприятия (Сложность ${STEALTH_DC})`,
     description: "Легко спрятать под курткой. Эффективен на расстоянии, но бесполезен в плотном клинче (Дистанция 1).",
   },
@@ -52,6 +54,7 @@ export const WEAPONS = [
     type: "Режущий (физ.)",
     distance: [1],
     concealable: true,
+    mortalCrit: true,
     stealth: `Проверка Ловкости (Скрытность) против Восприятия (Сложность ${STEALTH_DC})`,
     description: "Компактное холодное оружие. Идеально для бесшумных убийств со спины в упор (Дистанция 1).",
   },

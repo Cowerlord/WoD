@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from "vue";
-import { WOUND_STAGES, HEALING } from "../../data/combat.js";
+import { WOUND_STAGES, HEALING, MORTAL_RULES } from "../../data/combat.js";
 import { BEAST, BEAST_FAIL, HUMANITY_SCALE } from "../../data/beast.js";
 import { FEEDING } from "../../data/feeding.js";
+import { BLOOD_PACK } from "../../data/clothing.js";
 import { character, rules } from "../../stores/editor.js";
 import { fmt, woundRange } from "../../character/format.js";
 import { rollSave, rollGrapple, rollHeal } from "../../stores/rolls.js";
@@ -38,7 +39,15 @@ const humanityLine = HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.sli
         </tbody>
       </table>
       <p style="margin:4px 0 0;font-size:9.5pt"><b>Крит</b> (натуральная 20): кости урона ×2; аггр. атакой — тяжёлое ранение без спасброска.
-        <b>Солнце:</b> 1d10 аггр. за ход; <b>огонь:</b> 2d6 (свеча 1d4); по вампиру ×2{{ clan?.id === "lasombra" ? " (у вас ×3)" : "" }}.</p>
+        <b>Солнце:</b> 1d10 аггр. за ход; <b>огонь:</b> 2d6 (свеча 1d4); по вампиру ×2{{ clan?.id === "lasombra" ? " (у вас ×3)" : "" }}.
+        <template v-for="m in MORTAL_RULES" :key="m.name">{{ " " }}<b>{{ m.name }}:</b> {{ m.text }}</template></p>
+    </section>
+
+    <div class="cheat-pair">
+    <section v-if="rules.clothing()">
+      <h2>Одежда — {{ rules.clothing().name }}</h2>
+      <p style="margin:0">{{ rules.clothing().effect }} Оружие: {{ rules.clothing().weapons }}
+        Пакеты крови: <span v-for="n in rules.clothing().bloodPacks" :key="n" class="box"></span> — {{ BLOOD_PACK.dice }} ПК.</p>
     </section>
 
     <section v-if="clan?.bane">
@@ -46,6 +55,7 @@ const humanityLine = HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.sli
       <p style="margin:0">{{ clan.bane.text }}</p>
       <div v-if="clan.id === 'malkavian'" class="lines" style="margin-top:4px"><div>Моё расстройство:</div></div>
     </section>
+    </div>
 
     <section>
       <h2>Зверь (Бешенство)</h2>

@@ -43,7 +43,10 @@ const FREE = [4, 6, 8, 10, 12, 20, 100];
                   {{ r.request.mod ? fmt(r.request.mod) : "" }}
                 </span>
               </div>
+              <div v-if="r.request.target" class="flag" :class="{ gold: r.total >= r.request.target }">
+                {{ r.total >= r.request.target ? "Успех" : "Провал" }} (Сложность {{ r.request.target }})</div>
               <div v-if="r.crit" class="flag gold">Натуральная 20!{{ r.damage ? " Кости урона ×2." : "" }}</div>
+              <div v-if="r.crit && r.request.critNote" class="flag gold">{{ r.request.critNote }}</div>
               <div v-else-if="r.fumble" class="flag">Натуральная 1.</div>
               <div v-if="r.damage" class="line dmg">
                 <span class="total">{{ r.damage.total }}</span>

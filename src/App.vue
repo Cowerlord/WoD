@@ -5,6 +5,7 @@ import { ui } from "./stores/ui.js";
 import { editor, saveCurrent } from "./stores/editor.js";
 import { roster } from "./stores/roster.js";
 import AppHeader from "./components/AppHeader.vue";
+import AppFooter from "./components/AppFooter.vue";
 import LoginScreen from "./components/LoginScreen.vue";
 import Wizard from "./components/wizard/Wizard.vue";
 import MyCharacters from "./components/roster/MyCharacters.vue";
@@ -37,5 +38,6 @@ watch(() => ui.mode, (mode, prev) => {
       <DiceTray />
       <Lightbox />
     </template>
+    <AppFooter />
   </div>
 </template>

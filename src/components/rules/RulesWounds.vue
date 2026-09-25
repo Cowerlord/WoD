@@ -1,5 +1,5 @@
 <script setup>
-import { DAMAGE_TYPES, NON_AGGRAVATED_LIMIT, SEVERE_WOUND, SEVERE_RECOVERY, SUN_RULE, WOUND_STAGES, HEALING } from "../../data/combat.js";
+import { DAMAGE_TYPES, NON_AGGRAVATED_LIMIT, SEVERE_WOUND, SEVERE_RECOVERY, SUN_RULE, WOUND_STAGES, HEALING, MORTAL_RULES } from "../../data/combat.js";
 </script>
 
 <template>
@@ -14,6 +14,9 @@ import { DAMAGE_TYPES, NON_AGGRAVATED_LIMIT, SEVERE_WOUND, SEVERE_RECOVERY, SUN_
   <p>{{ SEVERE_WOUND }}</p>
   <p><b>Восстановление:</b> {{ SEVERE_RECOVERY }}</p>
   <p><b>Крит</b> аггравированной атакой (натуральная 20) — тяжёлое ранение без спасброска.</p>
+
+  <h3>Урон по смертным</h3>
+  <ul><li v-for="m in MORTAL_RULES" :key="m.name"><b>{{ m.name }}:</b> {{ m.text }}</li></ul>
 
   <h3>Солнце и огонь</h3>
   <p>{{ SUN_RULE }}</p>

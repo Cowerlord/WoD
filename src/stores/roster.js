@@ -123,6 +123,8 @@ export function flush() {
 }
 
 export async function deleteMine(id) {
+  // Персонаж может ещё отправляться на сервер: дожидаемся, иначе он останется в базе после удаления
+  if (outbox.has(id) || flushRun) await flush();
   outbox.delete(id);
   backupOutbox();
   if (knownOnServer.has(id)) {

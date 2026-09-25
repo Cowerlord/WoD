@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from "vue";
-import { STEALTH_DC } from "../../data/weapons.js";
 import { rules } from "../../stores/editor.js";
 import { fmt, distText, discipline } from "../../character/format.js";
 import { rollAttack, rollDamageOnly, rollStealth } from "../../stores/rolls.js";
@@ -30,7 +29,7 @@ const damageNote = computed(() => {
       <div class="note" :class="{ rollable: w.concealable }" @click="w.concealable && rollStealth()"><b>Спрятать от охраны и полиции:</b>
         <template v-if="w.concealable">
           Бросок d20 <b>{{ fmt(rules.stealthRoll()) }}</b> ({{ rules.stealthParts() }}){{ rules.stealthAdvNote() }}.
-          <b>{{ STEALTH_DC }} и выше</b> — оружие не заметили.
+          <b>{{ rules.stealthDC() }} и выше</b> — оружие не заметили.
         </template>
         <template v-else>Прятать нечего — оружия нет.</template>
       </div>

@@ -4,6 +4,8 @@ import { CONFIG } from "../../data/config.js";
 import { character, editor, rules } from "../../stores/editor.js";
 import { NOTES_MAX } from "../../character/sanitize.js";
 import VSelect from "../common/VSelect.vue";
+import { drinkBloodPack } from "../../stores/rolls.js";
+import { BLOOD_PACK } from "../../data/clothing.js";
 
 const s = computed(() => character.session);
 const live = computed(() => rules.live());
@@ -23,6 +25,7 @@ function setHP(v) {
 }
 const setTemp = v => { s.value.tempHP = clamp(v, 0, 99); };
 const setBP = v => { s.value.bp = clamp(v, 0, CONFIG.baseBP); };
+const setPacks = v => { s.value.packs = clamp(v, 0, rules.clothing()?.bloodPacks ?? 0); };
 const setHumanity = v => { s.value.humanity = clamp(v, 0, CONFIG.maxHumanity); };
 
 function newCombat() {
@@ -73,6 +76,16 @@ function newSession() {
                   :disabled="locked" :aria-label="`ПК: ${n}`" @click="setBP(n === s.bp ? n - 1 : n)"></button>
           <span class="of">{{ s.bp }} / {{ CONFIG.baseBP }}</span>
         </div>
+      </div>
+      <div v-if="rules.clothing()" class="counter">
+        <span class="field-lbl">Пакеты крови</span>
+        <div class="ctl">
+          <button type="button" :disabled="locked" @click="setPacks(s.packs - 1)">−</button>
+          <span class="val">{{ s.packs }}</span>
+          <span class="of">/ {{ rules.clothing().bloodPacks }}</span>
+          <button type="button" :disabled="locked" @click="setPacks(s.packs + 1)">+</button>
+        </div>
+        <button type="button" class="drink" :disabled="locked || !s.packs" :title="BLOOD_PACK.text" @click="drinkBloodPack">🩸 Выпить ({{ BLOOD_PACK.dice }} ПК)</button>
       </div>
       <div class="counter">
         <span class="field-lbl">Человечность</span>
@@ -132,5 +145,6 @@ function newSession() {
 .check input { accent-color: var(--blood-bright); margin-right: 6px; }
 .status { padding: 10px 14px; border-left: 3px solid var(--blood-bright); background: rgba(139,0,0,.08); margin-bottom: 14px; }
 .notes textarea { resize: vertical; }
+.drink { margin-top: 8px; padding: 4px 10px; font-size: .7rem; }
 .locked button:disabled, .locked input:disabled, .locked select:disabled, .locked textarea:disabled { opacity: .8; cursor: default; }
 </style>

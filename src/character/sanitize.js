@@ -2,6 +2,7 @@ import { ABILITIES, CONFIG, TOTAL_STEPS } from "../data/config.js";
 import { CLANS } from "../data/clans.js";
 import { WEAPONS } from "../data/weapons.js";
 import { ARMOR } from "../data/armor.js";
+import { CLOTHING, DEFAULT_CLOTHING } from "../data/clothing.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
 import { blankCharacter } from "./blank.js";
 
@@ -62,6 +63,8 @@ export function sanitizeCharacter(d) {
   }
 
   out.armorId = ARMOR.some(a => a.id === d.armorId) ? d.armorId : null;
+  const clothing = CLOTHING.find(c => c.id === d.clothingId);
+  out.clothingId = clothing && !clothing.excludeClans?.includes(out.clanId) ? clothing.id : DEFAULT_CLOTHING;
   out.step = clampInt(d.step, 1, TOTAL_STEPS, 1);
 
   const s = d.session && typeof d.session === "object" ? d.session : {};
@@ -69,6 +72,7 @@ export function sanitizeCharacter(d) {
     hp: s.hp == null ? null : clampInt(s.hp, 0, 999, null),
     tempHP: clampInt(s.tempHP, 0, 99, 0),
     bp: clampInt(s.bp, 0, CONFIG.baseBP, CONFIG.baseBP),
+    packs: clampInt(s.packs, 0, CLOTHING.find(c => c.id === out.clothingId).bloodPacks, 0),
     humanity: s.humanity == null ? null : clampInt(s.humanity, 0, CONFIG.maxHumanity, null),
     severe: clampInt(s.severe, 0, 2, 0),
     used: { heal: !!s.used?.heal, shield: !!s.used?.shield },

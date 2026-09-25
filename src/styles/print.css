@@ -2,6 +2,7 @@
   .sheet:not(.pdf-export) { padding: 8mm 5mm; }
   .sheet:not(.pdf-export) .sh-head { grid-template-columns: 1fr 1fr; }
   .sheet:not(.pdf-export) .sh-cols { grid-template-columns: 1fr; }
+  .sheet:not(.pdf-export) .cheat-pair { grid-template-columns: 1fr; }
 }
 
 @page { size: A4 portrait; margin: 10mm; }

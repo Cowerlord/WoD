@@ -1,6 +1,7 @@
 import { reactive, watch, watchEffect } from "vue";
 import { TOTAL_STEPS } from "../data/config.js";
 import { SKILL_PICKS } from "../data/skills.js";
+import { DEFAULT_CLOTHING } from "../data/clothing.js";
 import { blankCharacter } from "../character/blank.js";
 import { FILE_FORMAT, sanitizeCharacter, serialize } from "../character/sanitize.js";
 import { characterRules, skillById } from "../character/rules.js";
@@ -63,6 +64,13 @@ window.addEventListener("pagehide", saveCurrent);
 document.addEventListener("visibilitychange", () => { if (document.hidden) saveCurrent(); });
 
 watch(() => roster.rejection, r => { if (r?.id === character.id) showError(character.step, r.message); });
+
+// Одежда, недоступная новому клану, меняется на повседневную
+watchEffect(() => {
+  const c = rules.clothing();
+  if (!c || !rules.clothingAllowed(c)) character.clothingId = DEFAULT_CLOTHING;
+  if (character.session.packs > (rules.clothing()?.bloodPacks ?? 0)) character.session.packs = rules.clothing()?.bloodPacks ?? 0;
+});
 
 // Навык, ставший недоступным (сменили клан, сняли Анимализм), сбрасывается
 watchEffect(() => {

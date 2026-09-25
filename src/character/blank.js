@@ -1,4 +1,5 @@
 import { ABILITIES, CONFIG } from "../data/config.js";
+import { DEFAULT_CLOTHING } from "../data/clothing.js";
 
 export const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -6,6 +7,7 @@ export const blankSession = () => ({
   hp: null,
   tempHP: 0,
   bp: CONFIG.baseBP,
+  packs: 0,
   humanity: null,
   severe: 0,
   used: { heal: false, shield: false },
@@ -29,6 +31,7 @@ export function blankCharacter() {
     avatar: null,
     skills: { two: null, one: null },
     armorId: null,
+    clothingId: DEFAULT_CLOTHING,
     session: blankSession(),
   };
 }

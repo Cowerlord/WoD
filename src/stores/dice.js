@@ -52,8 +52,9 @@ export function hideRoll() {
 export function roll(request) {
   const mode = request.mode || "normal";
   if (request.onlyDamage) {
-    show({ request, damage: rollDamage(request.damage) });
-    return;
+    const damage = rollDamage(request.damage);
+    show({ request, damage });
+    return damage;
   }
   const d20 = rollD20(mode);
   const crit = d20.kept === 20;

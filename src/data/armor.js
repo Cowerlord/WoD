@@ -1,6 +1,6 @@
 export const ARMOR = [
   { id: "light", name: "Лёгкий бронежилет", ac: 2, note: "" },
-  { id: "kevlar", name: "Кевларовый жилет", ac: 3, init: -1, note: "−1 к Инициативе." },
+  { id: "kevlar", name: "Кевларовый жилет", ac: 3, init: -5, note: "−5 к Инициативе." },
   {
     id: "heavy",
     name: "Тяжёлый бронежилет",
