@@ -3,3 +3,4 @@ Thumbs.db
 node_modules/
 *.pdf
 supabase/*.local.sql
+dist/

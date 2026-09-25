@@ -1,0 +1,46 @@
+@media (max-width: 640px) {
+  .sheet:not(.pdf-export) { padding: 8mm 5mm; }
+  .sheet:not(.pdf-export) .sh-head { grid-template-columns: 1fr 1fr; }
+  .sheet:not(.pdf-export) .sh-cols { grid-template-columns: 1fr; }
+}
+
+@page { size: A4 portrait; margin: 10mm; }
+
+@media print {
+  html, body {
+    background: #fff !important; color: #000 !important;
+    margin: 0; padding: 0; font-size: 11pt;
+  }
+  .app-header, .steps, .nav, .no-print, .error, button { display: none !important; }
+  #mode-roster, #mode-all, #auth-screen, .view-banner { display: none !important; }
+  .rules { display: block; }
+  .rules-toc { display: none !important; }
+  .rules-body .panel { background: none !important; border: 0; box-shadow: none; padding: 0; margin-bottom: 8mm; }
+  .rules-body, .rules-body * { color: #000 !important; }
+  .rules-body th { background: #eee !important; }
+  .rules-body th, .rules-body td { border-color: #555 !important; }
+  .rules-body .entry, .rules-body tr { break-inside: avoid; page-break-inside: avoid; }
+  .app { max-width: none; padding: 0; margin: 0; }
+  .step { display: none !important; }
+  #step-5 { display: block !important; animation: none; }
+  #step-5 > .panel { background: none; border: 0; box-shadow: none; padding: 0; }
+
+  .sheet {
+    background: #fff !important; color: #000 !important;
+    box-shadow: none; padding: 0; margin: 0;
+    width: 100%; max-width: none;
+  }
+  .sheet * { color: #000 !important; }
+  .sheet h2, .sheet .sh-head { border-color: #000 !important; }
+  .sheet th { background: #eee !important; }
+  .sheet .sk-table th { background: none !important; }
+  .sheet .sh-head { grid-template-columns: 1.5fr 2.2fr 1fr .8fr .7fr !important; }
+  .sheet .sh-cols { grid-template-columns: .75fr .8fr 1.1fr 1.7fr !important; }
+  .cheat tr.current td { background: none !important; font-weight: inherit !important; }
+  #step-5 .panel > h2 { display: none; }
+  body:not(.print-cheat) #cheat-block { display: none !important; }
+  body.print-cheat #sheet-block { display: none !important; }
+  #cheat-block { margin: 0; }
+
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
