@@ -1,5 +1,5 @@
 import { reactive, watch, watchEffect } from "vue";
-import { TOTAL_STEPS } from "../data/config.js";
+import { TOTAL_STEPS, SHEET_STEP, PLAY_STEP } from "../data/config.js";
 import { SKILL_PICKS } from "../data/skills.js";
 import { DEFAULT_CLOTHING } from "../data/clothing.js";
 import { blankCharacter } from "../character/blank.js";
@@ -116,7 +116,8 @@ export function openMine(id, where) {
   try { data = sanitizeCharacter(raw); } catch { return; }
   loadCharacter(data);
   setMode("create");
-  goTo(where === "sheet" ? (rules.firstInvalidStep() ?? TOTAL_STEPS) : 1);
+  const target = { sheet: SHEET_STEP, play: PLAY_STEP }[where];
+  goTo(target ? (rules.firstInvalidStep() ?? target) : 1);
 }
 
 export function openOwnLast() {
@@ -154,7 +155,7 @@ export async function openOther(id, where) {
   markKnown(row.id);
   loadCharacter(data, { id: row.owner_id, name: row.owner?.username ?? "?", readOnly: !editable });
   setMode("create");
-  goTo(editable ? 1 : TOTAL_STEPS);
+  goTo(editable ? 1 : where === "play" ? PLAY_STEP : SHEET_STEP);
 }
 
 // Чужой лист на просмотре: подтягиваем свежее состояние «В игре»

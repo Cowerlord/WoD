@@ -59,6 +59,7 @@ async function importFile(e) {
       <div class="error">{{ roster.error }}</div>
       <div class="roster">
         <CharacterCard v-for="ch in list" :key="ch.id" :character="ch" :status="status(ch)">
+          <button type="button" class="primary" @click="openMine(ch.id, 'play')">Играть</button>
           <button type="button" @click="openMine(ch.id, 'sheet')">Лист</button>
           <button type="button" @click="openMine(ch.id, 'edit')">Изменить</button>
           <button type="button" @click="exportOne(ch)">💾 В файл</button>

@@ -6,6 +6,7 @@ import { setMode } from "./ui.js";
 import { loadRoster, resetRoster, flush } from "./roster.js";
 import { loadCharacter, openOwnLast, saveCurrent } from "./editor.js";
 import { loadCampaign } from "./campaign.js";
+import { hideRoll } from "./dice.js";
 
 function authErrorText(err) {
   const m = String(err?.message || err || "");
@@ -24,13 +25,14 @@ async function enterApp(user) {
   if (Number.isInteger(limit.data)) auth.charLimit = limit.data;
   loadRoster(mine.data);
   loadCampaign();
-  setMode("create");
+  setMode("roster");
   openOwnLast();
   auth.error = "";
   auth.status = "in";
 }
 
 function resetSession() {
+  hideRoll();
   auth.me = null;
   resetRoster();
   loadCharacter(blankCharacter());

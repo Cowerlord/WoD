@@ -1,11 +1,12 @@
 <script setup>
-import { TOTAL_STEPS } from "../../data/config.js";
+import { TOTAL_STEPS, SHEET_STEP } from "../../data/config.js";
 import { character, editor, isOthers, goTo, nextStep, jumpTo, startNew, closeView } from "../../stores/editor.js";
 import StepClan from "./StepClan.vue";
 import StepAbilities from "./StepAbilities.vue";
 import StepDisciplines from "./StepDisciplines.vue";
 import StepWeapon from "./StepWeapon.vue";
 import StepSheet from "./StepSheet.vue";
+import PlayScreen from "../play/PlayScreen.vue";
 
 const steps = [
   { title: "Клан", component: StepClan },
@@ -13,6 +14,7 @@ const steps = [
   { title: "Дисциплины", component: StepDisciplines },
   { title: "Оружие", component: StepWeapon },
   { title: "Лист", component: StepSheet },
+  { title: "В игре", component: PlayScreen },
 ];
 </script>
 
@@ -39,7 +41,8 @@ const steps = [
       <button type="button" :disabled="character.step === 1" @click="goTo(character.step - 1)">← Назад</button>
       <button type="button" class="no-print" @click="startNew">+ Новый персонаж</button>
       <span class="spacer"></span>
-      <button v-show="character.step < TOTAL_STEPS" type="button" class="primary" @click="nextStep">Далее →</button>
+      <button v-show="character.step < TOTAL_STEPS" type="button" class="primary" @click="nextStep">
+        {{ character.step === SHEET_STEP ? "Играть →" : "Далее →" }}</button>
     </div>
   </div>
 </template>

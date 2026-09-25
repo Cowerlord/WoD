@@ -7,7 +7,6 @@ import { downloadPdf } from "../../lib/pdf.js";
 import { printPart } from "../../lib/print.js";
 import CharacterSheet from "../sheet/CharacterSheet.vue";
 import CheatSheet from "../sheet/CheatSheet.vue";
-import SessionTracker from "../sheet/SessionTracker.vue";
 
 const pdfBusy = ref("");
 const safeName = () => character.name.replace(/[\\/:*?"<>|]+/g, "").trim() || "Персонаж";
@@ -33,7 +32,6 @@ function exportFile() {
 </script>
 
 <template>
-  <SessionTracker />
   <div class="panel">
     <div id="sheet-block">
       <div class="export-row">

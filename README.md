@@ -31,7 +31,7 @@ npm run build    # сборка в dist/
 | Лист персонажа и шпаргалка | `src/components/sheet/` |
 | Разделы вкладки «Правила» | `src/components/rules/` |
 | Мои / все персонажи | `src/components/roster/` |
-| Блок «В игре» | `src/components/sheet/SessionTracker.vue` |
+| Режим «В игре» (шаг 6) | `src/components/play/`, `src/stores/play.js`, эффекты и состояния — `src/data/play.js` |
 | Броски кубиков | `src/stores/rolls.js`, `src/components/dice/` |
 | Режим Мастера | `src/components/master/`, `src/stores/master.js` |
 | История патчей для игроков | `src/data/patches.js` |

@@ -17,6 +17,9 @@ export const speedText = sp => sp >= 3
 export const damageFormula = (w, die = w.die) =>
   `${die}${w.addMod === false ? "" : ` + ${w.modMul ? `${w.modMul}×` : ""}${abbrOf(w.ability)}`}`;
 
+// Цена уровня в ПК из текста «Активный [1 ПК]: …» (0 — пассивный)
+export const levelCost = text => Number((String(text).split(":")[0].match(/\[(\d+)\s*ПК\]/) || [])[1] || 0);
+
 // «Активный [1 ПК]: …» → «Акт, 1 ПК»
 export function levelTag(fullText) {
   const head = fullText.split(":")[0];

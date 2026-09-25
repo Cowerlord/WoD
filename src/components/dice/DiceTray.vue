@@ -11,10 +11,12 @@ watch(() => dice.rolling, on => {
   clearInterval(timer);
   if (on) timer = setInterval(() => { flicker.value = 1 + Math.floor(Math.random() * 20); }, 60);
 });
-// Клик мимо лотка закрывает его; новый бросок (по строке листа, кнопке кубика) — не закрывает
-const ROLL_TARGETS = ".tray, .rollable, .free, .drink";
+// Клик мимо закрывает лоток и меню кубиков; новый бросок (строка листа, кнопка броска, меню) — не закрывает лоток
+const ROLL_TARGETS = ".tray, .rollable, .roll-btn, .free";
+const freeOpen = ref(false);
 function onOutside(e) {
   if (dice.current && !e.target.closest(ROLL_TARGETS)) hideRoll();
+  if (freeOpen.value && !e.target.closest(".free")) freeOpen.value = false;
 }
 onMounted(() => document.addEventListener("pointerdown", onOutside));
 onBeforeUnmount(() => {
@@ -31,7 +33,6 @@ const face = computed(() => {
 const tone = computed(() => r.value?.crit ? "crit" : r.value?.fumble ? "fumble" : "");
 const modeText = { adv: "с преимуществом", dis: "с помехой" };
 
-const freeOpen = ref(false);
 const FREE = [4, 6, 8, 10, 12, 20, 100];
 </script>
 

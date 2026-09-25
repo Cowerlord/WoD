@@ -29,7 +29,9 @@ export const ABILITIES = [
   { key: "cha", name: "Харизма", abbr: "ХАР" },
 ];
 
-export const TOTAL_STEPS = 5;
+export const TOTAL_STEPS = 6;
+export const SHEET_STEP = 5;
+export const PLAY_STEP = 6;
 
 // Шкала Сложностей проверок для Мастера
 export const DIFFICULTY = [

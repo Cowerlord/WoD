@@ -6,6 +6,7 @@ import { WEAPONS, MASTERY, STEALTH_DC } from "../data/weapons.js";
 import { CLOTHING } from "../data/clothing.js";
 import { generationInfo } from "../data/blood.js";
 import { humanityFrenzy } from "../data/beast.js";
+import { COMBAT_EFFECTS, CONDITIONS } from "../data/play.js";
 import { ARMOR } from "../data/armor.js";
 import { HEALING, WOUND_STAGES } from "../data/combat.js";
 import { modOf, fmt, abbrOf, discipline, stageForHP } from "./format.js";
@@ -24,7 +25,15 @@ export function liveSummary(ch) {
 
 // Все расчёты по персонажу. ch — реактивный объект, поэтому результаты всегда актуальны.
 export function characterRules(ch) {
-  const mod = key => ch.abilities[key] == null ? 0 : modOf(ch.abilities[key]);
+  const baseMod = key => ch.abilities[key] == null ? 0 : modOf(ch.abilities[key]);
+  // Интенсификация Крови действует на броски, но не на макс. HP и КД
+  const surgeBonus = key => ch.session?.surge === key ? generationInfo(ch.generation).potency : 0;
+  const mod = key => baseMod(key) + surgeBonus(key);
+  const activeEffects = () => (ch.session?.effects || []).map(k => ({ key: k, ...COMBAT_EFFECTS[k] })).filter(e => e.name);
+  const activeConditions = () => CONDITIONS.filter(c => ch.session?.conditions?.includes(c.id));
+  const rollBonus = () => activeConditions().reduce((s, c) => s + (c.roll || 0), 0);
+  const meleeDamageBonus = () => activeConditions().reduce((s, c) => s + (c.meleeDamage || 0), 0);
+  const noWoundPenalty = () => activeEffects().some(e => e.noWoundPenalty);
   const clan = () => CLANS.find(c => c.id === ch.clanId) || null;
   const weapon = () => WEAPONS.find(w => w.id === ch.weaponId) || null;
   const armor = () => ARMOR.find(a => a.id === ch.armorId) || null;
@@ -53,8 +62,8 @@ export function characterRules(ch) {
   function combatStats() {
     const a = armor();
     return {
-      hp: CONFIG.baseHP + CONFIG.hpConMultiplier * mod("con") + passiveBonus("hp"),
-      ac: CONFIG.baseAC + (a ? a.ac : mod("dex")) + passiveBonus("ac"),
+      hp: CONFIG.baseHP + CONFIG.hpConMultiplier * baseMod("con") + passiveBonus("hp"),
+      ac: CONFIG.baseAC + (a ? a.ac : baseMod("dex")) + passiveBonus("ac") + activeEffects().reduce((s, e) => s + (e.ac || 0), 0),
       bp: maxBP(),
       speed: Math.min(CONFIG.maxSpeed, Math.max(CONFIG.minSpeed, CONFIG.baseSpeed + passiveBonus("speed"))),
       init: mod("dex") + passiveBonus("init") + (a?.init || 0),
@@ -88,12 +97,11 @@ export function characterRules(ch) {
   const severeDC = a => a.aggr ? CONFIG.saveDCBase + mod(a.aggr) : null;
 
   function weaponStats(w) {
-    const m = mod(w.ability) * (w.modMul || 1);
+    const m = (w.addMod !== false ? mod(w.ability) * (w.modMul || 1) : 0) + (w.kind === "melee" ? meleeDamageBonus() : 0);
     const die = weaponDie(w);
-    const addMod = w.addMod !== false && m !== 0;
     return {
       attack: w.save ? `Спб ${abbrOf(w.save)}${w.dc ? ` (Сл. ${saveDCof(w)})` : ""}` : fmt(attackBonus(w)),
-      damage: addMod ? `${die} ${m > 0 ? "+" : "−"} ${Math.abs(m)}` : die,
+      damage: m ? `${die} ${m > 0 ? "+" : "−"} ${Math.abs(m)}` : die,
     };
   }
 
@@ -155,7 +163,7 @@ export function characterRules(ch) {
   }
 
   return {
-    mod, clan, weapon, armor, clothing, clothingAllowed, stealthDC, generation, maxBP, frenzy,
+    mod, baseMod, surgeBonus, activeEffects, activeConditions, rollBonus, noWoundPenalty, clan, weapon, armor, clothing, clothingAllowed, stealthDC, generation, maxBP, frenzy,
     discLevel, hasDisc, learnedDisciplines, pointsSpent, pointsBudget, passiveNote,
     clanSkillId, skillAllowed, skillBonus,
     combatStats, fillTokens, saveDCs,

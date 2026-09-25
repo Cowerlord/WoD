@@ -11,6 +11,9 @@ export const blankSession = () => ({
   humanity: null,
   severe: 0,
   used: { heal: false, shield: false },
+  effects: [],
+  surge: null,
+  conditions: [],
   notes: "",
 });
 

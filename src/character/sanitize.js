@@ -6,6 +6,7 @@ import { CLOTHING, DEFAULT_CLOTHING } from "../data/clothing.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
 import { blankCharacter } from "./blank.js";
 import { generationInfo } from "../data/blood.js";
+import { COMBAT_EFFECTS, CONDITIONS } from "../data/play.js";
 
 export const NOTES_MAX = 2000;
 
@@ -77,6 +78,9 @@ export function sanitizeCharacter(d) {
     humanity: s.humanity == null ? null : clampInt(s.humanity, 0, CONFIG.maxHumanity, null),
     severe: clampInt(s.severe, 0, 2, 0),
     used: { heal: !!s.used?.heal, shield: !!s.used?.shield },
+    effects: Array.isArray(s.effects) ? [...new Set(s.effects.filter(e => COMBAT_EFFECTS[e]))] : [],
+    surge: ABILITIES.some(a => a.key === s.surge) ? s.surge : null,
+    conditions: Array.isArray(s.conditions) ? [...new Set(s.conditions.filter(c => CONDITIONS.some(x => x.id === c)))] : [],
     notes: cleanNotes(s.notes),
   };
   return out;

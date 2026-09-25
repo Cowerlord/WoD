@@ -59,6 +59,7 @@ onBeforeUnmount(() => clearInterval(timer));
         <h3 class="roster-group">{{ owner }}</h3>
         <div class="roster">
           <CharacterCard v-for="ch in list" :key="ch.id" :character="ch" :status="ch.status">
+            <button type="button" @click="openOther(ch.id, 'play')">В игре</button>
             <button type="button" @click="openOther(ch.id, 'sheet')">Лист</button>
             <template v-if="isAdmin()">
               <button type="button" @click="openOther(ch.id, 'edit')">Изменить</button>

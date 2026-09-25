@@ -23,6 +23,7 @@ function modeFor({ ability, skill, initiative, attack }) {
 }
 
 function woundPenalty() {
+  if (rules.noWoundPenalty()) return { mod: 0, dis: false, why: "" };
   const l = rules.live();
   const stage = l.stage?.level ?? 0;
   if (stage === 2 || l.severe?.level === 4) return { mod: -2, dis: true, why: stage === 2 ? "ранения ур. 2" : "Паралич крови" };
@@ -35,7 +36,10 @@ function check(label, mod, ctx, extra = {}) {
   const w = woundPenalty();
   const penalty = w.mod && (ctx.ability || ctx.initiative || ctx.attack) ? w.mod : 0;
   if (penalty) notes.push(`${fmt(penalty)}: ${w.why}`);
-  roll({ label, mod: mod + penalty, mode, notes, ...extra });
+  const bonus = ctx.ability || ctx.initiative || ctx.attack ? rules.rollBonus() : 0;
+  if (bonus) notes.push(`${fmt(bonus)}: ${rules.activeConditions().filter(c => c.roll).map(c => c.name).join(", ")}`);
+  if (ctx.ability && rules.surgeBonus(ctx.ability)) notes.push(`${fmt(rules.surgeBonus(ctx.ability))}: Интенсификация Крови`);
+  roll({ label, mod: mod + penalty + bonus, mode, notes, ...extra });
 }
 
 export const rollAbility = key => check(`Проверка: ${ABILITIES.find(a => a.key === key).name}`, rules.mod(key), { ability: key });
@@ -86,5 +90,6 @@ export function rollFrenzy() {
   if (f.mode === "adv") notes.push(`преимущество: Человечность ${h}`);
   if (f.mode === "dis") notes.push(`помеха: Человечность ${h}`);
   if (w.mod) notes.push(`${fmt(w.mod)}: ${w.why}`);
-  roll({ label: "Бешенство: спасбросок ВОС", mod: rules.mod("wis") + f.bonus + w.mod, mode: adv && !dis ? "adv" : dis && !adv ? "dis" : "normal", notes });
+  if (rules.rollBonus()) notes.push(`${fmt(rules.rollBonus())}: состояния`);
+  roll({ label: "Бешенство: спасбросок ВОС", mod: rules.mod("wis") + f.bonus + w.mod + rules.rollBonus(), mode: adv && !dis ? "adv" : dis && !adv ? "dis" : "normal", notes });
 }
