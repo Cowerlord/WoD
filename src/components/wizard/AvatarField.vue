@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { character, showError, clearError } from "../../stores/editor.js";
 import { resizeImage } from "../../lib/image.js";
+import { showImage } from "../../stores/lightbox.js";
 
 const fileInput = ref(null);
 
@@ -12,7 +13,7 @@ async function onFile(e) {
   if (!file.type.startsWith("image/")) { showError(1, "Нужен файл-картинка (JPG, PNG…)."); return; }
   if (file.size > 20 * 1024 * 1024) { showError(1, "Картинка слишком большая (больше 20 МБ)."); return; }
   try {
-    character.avatar = await resizeImage(file, 480);
+    character.avatar = await resizeImage(file, 800);
     clearError(1);
   } catch {
     showError(1, "Не удалось прочитать картинку.");
@@ -22,7 +23,8 @@ async function onFile(e) {
 
 <template>
   <div class="avatar-field">
-    <div class="avatar-preview" :style="character.avatar ? { backgroundImage: `url('${character.avatar}')` } : {}"></div>
+    <div class="avatar-preview" :class="{ zoom: character.avatar }" :style="character.avatar ? { backgroundImage: `url('${character.avatar}')` } : {}"
+         :title="character.avatar ? 'Открыть портрет' : ''" @click="showImage(character.avatar)"></div>
     <div>
       <span class="field-lbl">Портрет</span>
       <div class="export-row">
@@ -41,4 +43,5 @@ async function onFile(e) {
   width: 96px; height: 120px; flex: 0 0 auto; border: 1px dashed var(--blood); border-radius: 4px;
   background: var(--bg-input) center / cover no-repeat;
 }
+.avatar-preview.zoom { cursor: zoom-in; }
 </style>

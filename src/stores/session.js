@@ -65,3 +65,11 @@ export async function logout() {
   await supabase.auth.signOut({ scope: "local" });
   if (auth.me) resetSession();
 }
+
+export async function changePassword(password) {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (!error) return "";
+  if (error.code === "same_password") return "Новый пароль совпадает со старым.";
+  if (error.code === "weak_password") return "Слишком простой пароль.";
+  return authErrorText(error);
+}

@@ -4,10 +4,20 @@ import { DISCIPLINE_PASSIVES, SAVE_DC } from "../data/disciplines.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
 import { WEAPONS, MASTERY } from "../data/weapons.js";
 import { ARMOR } from "../data/armor.js";
-import { HEALING } from "../data/combat.js";
-import { modOf, fmt, abbrOf, discipline } from "./format.js";
+import { HEALING, WOUND_STAGES } from "../data/combat.js";
+import { modOf, fmt, abbrOf, discipline, stageForHP } from "./format.js";
 
 export const skillById = id => SKILLS.find(k => k.id === id) || null;
+
+// Короткая строка состояния для карточки: «HP 14/18 · ПК 3/5 · Ур. 1»
+export function liveSummary(ch) {
+  const l = characterRules(ch).live();
+  const parts = [`HP ${l.hp}/${l.max}`, `ПК ${ch.session.bp}/${CONFIG.baseBP}`];
+  if (ch.session.tempHP) parts.push(`врем. ${ch.session.tempHP}`);
+  if (l.stage?.level) parts.push(`ур. ${l.stage.level}`);
+  if (l.severe) parts.push(l.severe.cheatName);
+  return parts.join(" · ");
+}
 
 // Все расчёты по персонажу. ch — реактивный объект, поэтому результаты всегда актуальны.
 export function characterRules(ch) {
@@ -42,7 +52,6 @@ export function characterRules(ch) {
       initAdvantage: hasDisc("celerity", 2) && !a?.dexDisadvantage,
       initDisadvantage: !!a?.dexDisadvantage && !hasDisc("celerity", 2),
       noDash: !!a?.noDash,
-      tempHP: hasDisc("fortitude") || hasDisc("vicissitude"),
     };
   }
 
@@ -93,6 +102,18 @@ export function characterRules(ch) {
     return m ? `${HEALING.die} ${m > 0 ? "+" : "−"} ${Math.abs(m)}` : HEALING.die;
   };
 
+  function live() {
+    const max = combatStats().hp;
+    const hp = ch.session.hp ?? max;
+    return {
+      max,
+      hp,
+      humanity: ch.session.humanity ?? ch.humanity,
+      stage: stageForHP(hp, max, WOUND_STAGES),
+      severe: ch.session.severe ? WOUND_STAGES.find(w => w.level === 2 + ch.session.severe) : null,
+    };
+  }
+
   const validators = {
     1() {
       if (!ch.name.trim()) return "Введите имя персонажа.";
@@ -126,7 +147,7 @@ export function characterRules(ch) {
     clanSkillId, skillAllowed, skillBonus,
     combatStats, fillTokens, saveDCs,
     weaponDie, weaponUpgrade, mastery, attackNote, saveDCof, severeDC, weaponStats,
-    stealthAdvNote, stealthRoll, stealthParts, healAmount,
+    stealthAdvNote, stealthRoll, stealthParts, healAmount, live,
     validators, firstInvalidStep,
   };
 }

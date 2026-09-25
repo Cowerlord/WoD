@@ -4,6 +4,7 @@ import { auth } from "../../stores/auth.js";
 import { roster, myCount, isFull, deleteMine, addMine } from "../../stores/roster.js";
 import { character, loadCharacter, openMine, startNew } from "../../stores/editor.js";
 import { sanitizeCharacter } from "../../character/sanitize.js";
+import { liveSummary } from "../../character/rules.js";
 import { blankCharacter } from "../../character/blank.js";
 import { downloadJson } from "../../lib/files.js";
 import CharacterCard from "../common/CharacterCard.vue";
@@ -13,6 +14,10 @@ import LegacyNotice from "./LegacyNotice.vue";
 const fileInput = ref(null);
 const list = computed(() => Object.values(roster.characters)
   .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || ""))));
+
+function status(ch) {
+  try { return liveSummary(sanitizeCharacter(ch)); } catch { return ""; }
+}
 
 function exportOne(ch) {
   try { downloadJson(sanitizeCharacter(ch), ch.name); } catch { /* повреждённая запись */ }
@@ -53,7 +58,7 @@ async function importFile(e) {
       </div>
       <div class="error">{{ roster.error }}</div>
       <div class="roster">
-        <CharacterCard v-for="ch in list" :key="ch.id" :character="ch">
+        <CharacterCard v-for="ch in list" :key="ch.id" :character="ch" :status="status(ch)">
           <button type="button" @click="openMine(ch.id, 'sheet')">Лист</button>
           <button type="button" @click="openMine(ch.id, 'edit')">Изменить</button>
           <button type="button" @click="exportOne(ch)">💾 В файл</button>

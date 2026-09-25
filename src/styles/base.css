@@ -61,16 +61,15 @@ label.field .counter { display: block; text-align: right; font-size: .8rem; colo
 label.field .counter.full { color: var(--blood-bright); }
 label.field span { display: block; font-family: var(--font-title); font-size: .8rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 4px; }
 
-input[type=text], input[type=password], textarea, select {
+input[type=text], input[type=password], textarea {
   width: 100%;
   background: var(--bg-input); color: var(--text);
   border: 1px solid var(--border); border-radius: 4px;
   padding: 10px 12px; font: inherit;
 }
-input[type=text]:focus, input[type=password]:focus, textarea:focus, select:focus {
+input[type=text]:focus, input[type=password]:focus, textarea:focus {
   outline: none; border-color: var(--blood-bright); box-shadow: 0 0 0 2px rgba(193,18,31,.25);
 }
-select option:disabled { color: #5a4a48; }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
 .card {

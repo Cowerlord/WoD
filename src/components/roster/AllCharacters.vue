@@ -1,9 +1,11 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { auth, isAdmin } from "../../stores/auth.js";
 import { deleteAny } from "../../stores/roster.js";
 import { character, editor, openOther, openOwnLast } from "../../stores/editor.js";
 import { fetchOthers, describeError } from "../../api/characters.js";
+import { sanitizeCharacter, FILE_FORMAT } from "../../character/sanitize.js";
+import { liveSummary } from "../../character/rules.js";
 import CharacterCard from "../common/CharacterCard.vue";
 import ConfirmButton from "../common/ConfirmButton.vue";
 
@@ -14,7 +16,8 @@ const groups = computed(() => {
   for (const r of rows.value || []) {
     const owner = r.owner?.username ?? "?";
     if (!map.has(owner)) map.set(owner, []);
-    map.get(owner).push({ id: r.id, name: r.name, clanId: r.clan_id, updatedAt: r.updated_at, avatar: r.avatar });
+    const ch = sanitizeCharacter({ format: FILE_FORMAT, clanId: r.clan_id, abilities: r.abilities, disciplines: r.disciplines, session: r.session });
+    map.get(owner).push({ id: r.id, name: r.name, clanId: r.clan_id, updatedAt: r.updated_at, avatar: r.avatar, status: liveSummary(ch) });
   }
   return [...map].sort(([a], [b]) => a.localeCompare(b));
 });
@@ -33,7 +36,13 @@ async function remove(id) {
   load();
 }
 
-onMounted(load);
+// Мастер видит свежее состояние партии без перезагрузки
+let timer = null;
+onMounted(() => {
+  load();
+  timer = setInterval(() => { if (!document.hidden) load(); }, 20000);
+});
+onBeforeUnmount(() => clearInterval(timer));
 </script>
 
 <template>
@@ -49,7 +58,7 @@ onMounted(load);
       <template v-for="[owner, list] in groups" :key="owner">
         <h3 class="roster-group">{{ owner }}</h3>
         <div class="roster">
-          <CharacterCard v-for="ch in list" :key="ch.id" :character="ch">
+          <CharacterCard v-for="ch in list" :key="ch.id" :character="ch" :status="ch.status">
             <button type="button" @click="openOther(ch.id, 'sheet')">Лист</button>
             <template v-if="isAdmin()">
               <button type="button" @click="openOther(ch.id, 'edit')">Изменить</button>

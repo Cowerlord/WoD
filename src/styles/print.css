@@ -12,7 +12,7 @@
     margin: 0; padding: 0; font-size: 11pt;
   }
   .app-header, .steps, .nav, .no-print, .error, button { display: none !important; }
-  #mode-roster, #mode-all, #auth-screen, .view-banner { display: none !important; }
+  #mode-roster, #mode-all, #mode-master, #auth-screen, .view-banner { display: none !important; }
   .rules { display: block; }
   .rules-toc { display: none !important; }
   .rules-body .panel { background: none !important; border: 0; box-shadow: none; padding: 0; margin-bottom: 8mm; }

@@ -3,6 +3,7 @@ import { SKILLS } from "../../data/skills.js";
 import { rules } from "../../stores/editor.js";
 import { fmt, abbrOf } from "../../character/format.js";
 import SheetWeapon from "./SheetWeapon.vue";
+import { rollSkill } from "../../stores/rolls.js";
 </script>
 
 <template>
@@ -16,7 +17,8 @@ import SheetWeapon from "./SheetWeapon.vue";
     <table class="sk-table">
       <thead><tr><th>Навык</th><th>Хар.</th><th>Нав.</th><th>Итог</th></tr></thead>
       <tbody>
-        <tr v-for="sk in SKILLS.filter(rules.skillAllowed)" :key="sk.id" :class="{ own: rules.skillBonus(sk.id) }">
+        <tr v-for="sk in SKILLS.filter(rules.skillAllowed)" :key="sk.id" class="rollable" :class="{ own: rules.skillBonus(sk.id) }"
+            title="Бросить проверку" @click="rollSkill(sk)">
           <td>{{ sk.name }}</td>
           <td class="sk-n">{{ abbrOf(sk.ability) }} {{ fmt(rules.mod(sk.ability)) }}</td>
           <td class="sk-n">{{ rules.skillBonus(sk.id) ? fmt(rules.skillBonus(sk.id)) : "" }}</td>

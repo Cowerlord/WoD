@@ -1,6 +1,6 @@
 <script setup>
 import { watch } from "vue";
-import { auth } from "./stores/auth.js";
+import { auth, isAdmin } from "./stores/auth.js";
 import { ui } from "./stores/ui.js";
 import { editor, saveCurrent } from "./stores/editor.js";
 import { roster } from "./stores/roster.js";
@@ -10,6 +10,9 @@ import Wizard from "./components/wizard/Wizard.vue";
 import MyCharacters from "./components/roster/MyCharacters.vue";
 import AllCharacters from "./components/roster/AllCharacters.vue";
 import RulesPage from "./components/rules/RulesPage.vue";
+import DiceTray from "./components/dice/DiceTray.vue";
+import Lightbox from "./components/common/Lightbox.vue";
+import MasterPage from "./components/master/MasterPage.vue";
 
 watch(() => ui.mode, (mode, prev) => {
   if (prev === "roster") roster.error = "";
@@ -29,7 +32,10 @@ watch(() => ui.mode, (mode, prev) => {
       <RulesPage v-if="ui.mode === 'rules'" />
       <MyCharacters v-else-if="ui.mode === 'roster'" />
       <AllCharacters v-else-if="ui.mode === 'all'" />
+      <MasterPage v-else-if="ui.mode === 'master' && isAdmin()" />
       <Wizard v-show="ui.mode === 'create'" />
+      <DiceTray />
+      <Lightbox />
     </template>
   </div>
 </template>

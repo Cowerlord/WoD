@@ -3,17 +3,14 @@ import { computed } from "vue";
 import { WOUND_STAGES, HEALING } from "../../data/combat.js";
 import { BEAST, BEAST_FAIL, HUMANITY_SCALE } from "../../data/beast.js";
 import { FEEDING } from "../../data/feeding.js";
-import { character, editor, rules } from "../../stores/editor.js";
+import { character, rules } from "../../stores/editor.js";
 import { fmt, woundRange } from "../../character/format.js";
+import { rollSave, rollGrapple, rollHeal } from "../../stores/rolls.js";
 
 const clan = computed(() => rules.clan());
 const maxHP = computed(() => rules.combatStats().hp);
 
-const currentStage = computed(() => {
-  const hp = editor.currentHP;
-  if (hp == null || Number.isNaN(hp)) return null;
-  return WOUND_STAGES.find(st => st.range && (([lo, hi]) => hp >= lo && hp <= hi)(st.range(maxHP.value)))?.level ?? null;
-});
+const currentStage = computed(() => rules.live().stage?.level ?? null);
 
 const baneTitle = computed(() => clan.value.bane.name === "Слабость клана" ? clan.value.name : clan.value.bane.name);
 const humanityLine = HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.slice(1);
@@ -62,7 +59,7 @@ const humanityLine = HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.sli
           </tr>
         </tbody>
       </table>
-      <p style="margin:4px 0 0;font-size:9.5pt">Спасбросок ВОС d20 {{ fmt(rules.mod("wis")) }}. {{ BEAST_FAIL }}
+      <p style="margin:4px 0 0;font-size:9.5pt"><span class="rollable" @click="rollSave('wis', 'Бешенство: спасбросок ВОС')">Спасбросок ВОС d20 {{ fmt(rules.mod("wis")) }}.</span> {{ BEAST_FAIL }}
         Человечность — {{ humanityLine }}</p>
     </section>
 
@@ -71,9 +68,9 @@ const humanityLine = HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.sli
       <ul>
         <li v-for="f in FEEDING" :key="f.name"><b>{{ f.name }}:</b> {{ f.text }}
           <template v-if="f.name === 'Голодное Безумие' && clan?.id === 'gangrel'"> Гангрел — без спасброска (см. слабость клана).</template>
-          <b v-if="f.name === 'Захват'"> Ваш бросок: d20 {{ fmt(rules.mod("str") + rules.skillBonus("athletics")) }}.</b>
+          <b v-if="f.name === 'Захват'" class="rollable" @click="rollGrapple"> Ваш бросок: d20 {{ fmt(rules.mod("str") + rules.skillBonus("athletics")) }}.</b>
         </li>
-        <li><b>Лечение</b> <span class="box"></span> (раз за бой): {{ HEALING.cost }} → {{ rules.healAmount() }} HP (1d4 + ИНТ), бонусное действие.
+        <li><b class="rollable" @click="rollHeal">Лечение</b> <span class="box"></span> (раз за бой): {{ HEALING.cost }} → {{ rules.healAmount() }} HP (1d4 + ИНТ), бонусное действие.
           Нельзя во время питья, на 3-м уровне ранений и в течение 1 хода после аггр. урона.</li>
       </ul>
     </section>

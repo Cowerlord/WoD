@@ -31,6 +31,12 @@ export function splitLevel(text) {
   return i > 0 ? { head: text.slice(0, i), body: text.slice(i + 1) } : { head: "", body: text };
 }
 
+// Стадия ранения по HP (только стадии с диапазоном HP)
+export function stageForHP(hp, maxHP, stages) {
+  if (hp == null || Number.isNaN(hp)) return null;
+  return stages.find(st => st.range && (([lo, hi]) => hp >= lo && hp <= hi)(st.range(maxHP))) ?? null;
+}
+
 export function woundRange(stage, maxHP) {
   if (!stage.range) return "аггр.";
   const [lo, hi] = stage.range(maxHP);

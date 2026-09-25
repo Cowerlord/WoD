@@ -6,8 +6,11 @@ import TextField from "../common/TextField.vue";
 import RuleLink from "../common/RuleLink.vue";
 import ClanDetails from "../common/ClanDetails.vue";
 import AvatarField from "./AvatarField.vue";
+import VSelect from "../common/VSelect.vue";
 
-const humanityOptions = Array.from({ length: CONFIG.maxHumanity + 1 }, (_, h) => h);
+const humanityOptions = Array.from({ length: CONFIG.maxHumanity + 1 }, (_, h) =>
+  ({ value: h, label: `${h}${h === CONFIG.startingHumanity ? " (старт)" : ""}` }));
+const generationOptions = CONFIG.generationOptions.map(g => ({ value: g, label: `${g}-е Поколение (Неофит)` }));
 
 function selectClan(id) {
   if (character.clanId !== id) character.disciplines = {};
@@ -24,14 +27,10 @@ function selectClan(id) {
                placeholder="Например: Бывший следователь, потерявший веру" />
     <AvatarField />
     <label class="field"><span>Человечность</span>
-      <select v-model.number="character.humanity">
-        <option v-for="h in humanityOptions" :key="h" :value="h">{{ h }}{{ h === CONFIG.startingHumanity ? " (старт)" : "" }}</option>
-      </select>
+      <VSelect v-model="character.humanity" :options="humanityOptions" />
     </label>
     <label class="field"><span>Поколение</span>
-      <select v-model.number="character.generation">
-        <option v-for="g in CONFIG.generationOptions" :key="g" :value="g">{{ g }}-е Поколение (Неофит)</option>
-      </select>
+      <VSelect v-model="character.generation" :options="generationOptions" />
     </label>
     <p class="hint">Все персонажи начинают Неофитами с Силой Крови 1.
       <RuleLink rule="generations">Что такое Поколение?</RuleLink></p>

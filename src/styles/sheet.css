@@ -88,3 +88,10 @@
   background: #fff center / cover no-repeat; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px;
 }
 .sheet .hum { margin-top: 6px; border: 1.5px solid #1a1112; border-radius: 6px; padding: 4px 8px; }
+
+@media screen {
+  .sheet .rollable { cursor: pointer; transition: background .15s; }
+  .sheet .rollable:hover { background: rgba(193,18,31,.12); }
+  .sheet .rollable:active { background: rgba(193,18,31,.25); }
+  .sheet .portrait.zoom { cursor: zoom-in; }
+}

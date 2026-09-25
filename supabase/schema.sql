@@ -180,3 +180,30 @@ begin
 end $$;
 
 revoke all on function private.create_player(text, text, text), private.set_password(text, text) from public, anon, authenticated;
+
+-- ---------- Пинг, чтобы бесплатный проект не засыпал (вызывает .github/workflows/keepalive.yml) ----------
+create or replace function public.ping()
+returns int language sql stable security definer set search_path = '' as $$
+  select count(*)::int from (select 1 from public.characters limit 1) t;
+$$;
+revoke all on function public.ping() from public;
+grant execute on function public.ping() to anon, authenticated;
+
+-- ---------- Доп. очки Дисциплин выдаёт только админ ----------
+-- Игрок при создании получает 0, при сохранении у него остаётся прежнее значение
+create or replace function private.guard_bonus_points()
+returns trigger language plpgsql security definer set search_path = '' as $$
+begin
+  if public.is_admin() then return new; end if;
+  if tg_op = 'INSERT' then
+    new.data := jsonb_set(new.data, '{bonusPoints}', '0');
+  else
+    new.data := jsonb_set(new.data, '{bonusPoints}', coalesce(old.data -> 'bonusPoints', '0'));
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists characters_bonus on public.characters;
+create trigger characters_bonus
+  before insert or update on public.characters
+  for each row execute function private.guard_bonus_points();

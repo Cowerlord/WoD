@@ -4,6 +4,7 @@ import { SKILLS, SKILL_PICKS } from "../../data/skills.js";
 import { character, rules, clearError } from "../../stores/editor.js";
 import { skillById } from "../../character/rules.js";
 import { abbrOf } from "../../character/format.js";
+import VSelect from "../common/VSelect.vue";
 
 const groups = ABILITIES.map(a => ({ a, list: SKILLS.filter(k => k.ability === a.key) })).filter(g => g.list.length);
 const clanSkill = () => skillById(rules.clanSkillId());
@@ -13,6 +14,11 @@ function disabled(pick, sk) {
   return sk.id === rules.clanSkillId() || sk.id === character.skills[other.key] || !rules.skillAllowed(sk);
 }
 const why = sk => !rules.skillAllowed(sk) ? " (нужен Анимализм)" : sk.id === rules.clanSkillId() ? " (уже от клана)" : "";
+
+const optionsFor = pick => [
+  { value: null, label: "—" },
+  ...groups.flatMap(g => g.list.map(k => ({ value: k.id, label: k.name, group: g.a.name, disabled: disabled(pick, k), hint: why(k).replace(/[()]/g, "").trim() }))),
+];
 
 function choose(pick, id) {
   character.skills[pick.key] = id || null;
@@ -26,12 +32,7 @@ function choose(pick, id) {
       <span v-if="clanSkill()" class="hint"> ({{ abbrOf(clanSkill().ability) }})</span></p>
     <div class="skill-row">
       <label v-for="p in SKILL_PICKS" :key="p.key" class="field skill-pick"><span>Навык +{{ p.bonus }}</span>
-        <select :value="character.skills[p.key] ?? ''" @change="choose(p, $event.target.value)">
-          <option value="">—</option>
-          <optgroup v-for="g in groups" :key="g.a.key" :label="g.a.name">
-            <option v-for="k in g.list" :key="k.id" :value="k.id" :disabled="disabled(p, k)">{{ k.name }}{{ why(k) }}</option>
-          </optgroup>
-        </select>
+        <VSelect :model-value="character.skills[p.key]" :options="optionsFor(p)" @update:model-value="choose(p, $event)" />
       </label>
     </div>
   </div>

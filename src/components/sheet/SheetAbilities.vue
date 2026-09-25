@@ -4,16 +4,19 @@ import { BLOOD_SURGE } from "../../data/blood.js";
 import { HUMANITY_SCALE } from "../../data/beast.js";
 import { character, rules } from "../../stores/editor.js";
 import { fmt } from "../../character/format.js";
+import { rollAbility } from "../../stores/rolls.js";
+import { showImage } from "../../stores/lightbox.js";
 </script>
 
 <template>
   <section>
-    <div class="portrait" :style="character.avatar ? { backgroundImage: `url('${character.avatar}')` } : {}">
+    <div class="portrait" :class="{ zoom: character.avatar }" :style="character.avatar ? { backgroundImage: `url('${character.avatar}')` } : {}"
+         @click="showImage(character.avatar)">
       <span v-if="!character.avatar" class="lbl">Портрет</span>
     </div>
     <h2>Характеристики</h2>
     <table class="ab-table"><tbody>
-      <tr v-for="a in ABILITIES" :key="a.key">
+      <tr v-for="a in ABILITIES" :key="a.key" class="rollable" title="Бросить проверку" @click="rollAbility(a.key)">
         <td class="ab-n">{{ a.abbr }}</td>
         <td class="ab-v">{{ character.abilities[a.key] ?? "—" }}</td>
         <td class="ab-m">{{ fmt(rules.mod(a.key)) }}</td>

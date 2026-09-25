@@ -2,6 +2,7 @@
 import { DISCIPLINE_ATTACKS } from "../../data/disciplines.js";
 import { rules } from "../../stores/editor.js";
 import { discipline, levelTag, abbrOf } from "../../character/format.js";
+import { rollAttack } from "../../stores/rolls.js";
 
 const levelsOf = lvl => Array.from({ length: lvl }, (_, i) => i + 1);
 const shortText = (id, k) => rules.fillTokens(discipline(id).short?.[k] ?? discipline(id).levels[k] ?? "");
@@ -23,7 +24,7 @@ function attackLine(a) {
       <p v-for="k in levelsOf(lvl)" :key="k">
         <span class="lv">Ур {{ k }} ({{ levelTag(discipline(id).levels[k] || "") }}):</span> {{ shortText(id, k) }}
       </p>
-      <p v-for="a in attacksOf(id, lvl)" :key="a.name" class="atk">{{ attackLine(a) }}</p>
+      <p v-for="a in attacksOf(id, lvl)" :key="a.name" class="atk rollable" title="Бросить" @click="rollAttack(a)">{{ attackLine(a) }}</p>
     </div>
     <p v-if="!rules.learnedDisciplines().length" class="note">—</p>
     <div v-if="rules.clan()?.ability" class="dsc">

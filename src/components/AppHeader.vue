@@ -4,7 +4,11 @@ import { ui, setMode } from "../stores/ui.js";
 import { roster } from "../stores/roster.js";
 import { logout } from "../stores/session.js";
 import { music, toggleMusic } from "../stores/music.js";
+import { ref } from "vue";
 import PatchNotes from "./PatchNotes.vue";
+import ChangePassword from "./ChangePassword.vue";
+
+const passwordOpen = ref(false);
 
 const modes = [
   ["create", "Создание персонажа"],
@@ -30,13 +34,16 @@ const modes = [
         <button v-for="[id, label] in modes" :key="id" type="button" :class="{ on: ui.mode === id }" @click="setMode(id)">
           {{ label }}
         </button>
+        <button v-if="isAdmin()" type="button" :class="{ on: ui.mode === 'master' }" @click="setMode('master')">Мастер</button>
       </div>
       <div class="user-bar">
         <span><b>{{ auth.me.username }}</b> <span v-if="isAdmin()" class="role">· админ</span></span>
         <span :class="{ err: roster.saveFailed }">{{ roster.saveStatus }}</span>
+        <button type="button" @click="passwordOpen = true">Пароль</button>
         <button type="button" @click="logout">Выйти</button>
       </div>
     </template>
+    <ChangePassword v-if="passwordOpen" @close="passwordOpen = false" />
   </header>
 </template>
 

@@ -8,9 +8,13 @@ export const fetchLimit = () => supabase.rpc("character_limit");
 export const fetchMine = ownerId => table().select("id, data, updated_at").eq("owner_id", ownerId);
 
 export const fetchOthers = myId => table()
-  .select("id, owner_id, name, clan_id, updated_at, avatar:data->>avatar, owner:profiles(username)")
+  .select("id, owner_id, name, clan_id, updated_at, avatar:data->>avatar, abilities:data->abilities, disciplines:data->disciplines, session:data->session, owner:profiles(username)")
   .neq("owner_id", myId)
   .order("updated_at", { ascending: false });
+
+export const fetchParty = () => table()
+  .select("id, name, clan_id, abilities:data->abilities, disciplines:data->disciplines, armorId:data->>armorId, session:data->session, owner:profiles(username)")
+  .order("name");
 
 export const fetchCharacter = id => table()
   .select("id, owner_id, data, owner:profiles(username)").eq("id", id).maybeSingle();

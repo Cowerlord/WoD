@@ -270,3 +270,16 @@ export const SAVE_DC = [
   },
   { id: "thaum", label: "Тауматургии", ability: "int", disciplines: ["thaumaturgy"] },
 ];
+
+// Постоянное преимущество на броски от изученных дисциплин (ситуативные — «тет-а-тет», «в темноте» — не считаются)
+export const ROLL_ADVANTAGES = [
+  { discipline: "celerity", level: 2, abilities: ["dex"], initiative: true },
+  { discipline: "fortitude", level: 2, abilities: ["con"] },
+  { discipline: "potence", level: 2, abilities: ["str"] },
+  { discipline: "animalism", level: 2, abilities: ["wis"] },
+  { discipline: "auspex", level: 2, abilities: ["int"], skills: ["occult", "perception"] },
+  { discipline: "obfuscate", level: 2, skills: ["stealth"] },
+  { discipline: "protean", level: 2, skills: ["survival", "perception"] },
+  { discipline: "thaumaturgy", level: 2, skills: ["occult", "medicine"] },
+  { discipline: "vicissitude", level: 2, abilities: ["con"] },
+];

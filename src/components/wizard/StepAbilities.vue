@@ -4,6 +4,7 @@ import { ABILITIES, CONFIG } from "../../data/config.js";
 import { character, editor, clearError } from "../../stores/editor.js";
 import { modOf, fmt } from "../../character/format.js";
 import RuleLink from "../common/RuleLink.vue";
+import VSelect from "../common/VSelect.vue";
 
 const takenByOther = (key, v) => Object.entries(character.abilities).some(([k, val]) => k !== key && val === v);
 
@@ -16,8 +17,13 @@ const pool = computed(() => {
   });
 });
 
-function assign(key, raw) {
-  character.abilities[key] = raw === "" ? null : Number(raw);
+const optionsFor = key => [
+  { value: null, label: "—" },
+  ...CONFIG.abilityArray.map(v => ({ value: v, label: String(v), disabled: takenByOther(key, v), hint: takenByOther(key, v) ? "занято" : "" })),
+];
+
+function assign(key, v) {
+  character.abilities[key] = v;
   clearError(2);
 }
 </script>
@@ -32,12 +38,8 @@ function assign(key, raw) {
       <div v-for="a in ABILITIES" :key="a.key" class="ability">
         <div class="name">{{ a.name }}</div>
         <div class="abbr">{{ a.abbr }}</div>
-        <select :value="character.abilities[a.key] ?? ''" @change="assign(a.key, $event.target.value)">
-          <option value="">—</option>
-          <option v-for="v in CONFIG.abilityArray" :key="v" :value="v" :disabled="takenByOther(a.key, v)">
-            {{ v }}{{ takenByOther(a.key, v) ? " (занято)" : "" }}
-          </option>
-        </select>
+        <VSelect class="ab-select" :model-value="character.abilities[a.key]" :options="optionsFor(a.key)"
+                 @update:model-value="assign(a.key, $event)" />
         <div class="mod">{{ character.abilities[a.key] == null ? "" : fmt(modOf(character.abilities[a.key])) }}</div>
       </div>
     </div>
@@ -53,7 +55,8 @@ function assign(key, raw) {
 }
 .ability .name { font-family: var(--font-title); font-size: .85rem; color: var(--gold); letter-spacing: .06em; }
 .ability .abbr { font-size: .75rem; color: var(--text-dim); }
-.ability select { margin: 8px 0; text-align: center; }
+.ab-select { margin: 8px 0; }
+.ab-select :deep(.vs-value) { text-align: center; }
 .ability .mod { font-family: var(--font-title); font-size: 1.6rem; color: var(--blood-bright); min-height: 1.2em; }
 .pool { margin-bottom: 16px; }
 .chip {

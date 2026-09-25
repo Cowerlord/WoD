@@ -18,7 +18,6 @@ export const rules = characterRules(character);
 export const editor = reactive({
   owner: { id: null, name: "", readOnly: false },
   errors: { 1: "", 2: "", 3: "", 4: "", 5: "" },
-  currentHP: null,
   allError: "",
 });
 
@@ -30,7 +29,6 @@ export const clearError = step => { editor.errors[step] = ""; };
 export function loadCharacter(data, owner) {
   Object.assign(character, structuredClone(data));
   editor.owner = owner ?? { id: auth.me?.id ?? null, name: auth.me?.username ?? "", readOnly: false };
-  editor.currentHP = null;
   for (const k in editor.errors) editor.errors[k] = "";
   rememberSnap(character.id, snapshot(serialize(character)));
 }
@@ -143,6 +141,15 @@ export async function openOther(id, where) {
   setMode("create");
   goTo(editable ? 1 : TOTAL_STEPS);
 }
+
+// Чужой лист на просмотре: подтягиваем свежее состояние «В игре»
+setInterval(async () => {
+  if (!editor.owner.readOnly || document.hidden) return;
+  const id = character.id;
+  const { data: row } = await fetchCharacter(id);
+  if (!row || character.id !== id || !editor.owner.readOnly) return;
+  try { character.session = sanitizeCharacter({ format: FILE_FORMAT, ...row.data, id: row.id }).session; } catch { /* повреждённая запись */ }
+}, 20000);
 
 export function closeView() {
   saveCurrent();

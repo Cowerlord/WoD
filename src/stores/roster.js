@@ -148,6 +148,7 @@ export async function deleteAny(id) {
 // Импорт и перенос всегда создают нового персонажа с новым id
 export function addMine(data, updatedAt = new Date().toISOString()) {
   const saved = { format: FILE_FORMAT, version: 1, ...data, id: newId(), updatedAt };
+  if (auth.me.role !== "admin") saved.bonusPoints = 0;
   roster.characters[saved.id] = saved;
   lastSnap.set(saved.id, snapshot(saved));
   queueSave(saved, auth.me.id);

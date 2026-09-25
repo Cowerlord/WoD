@@ -1,6 +1,7 @@
 <script setup>
 import { CONFIG } from "../../data/config.js";
 import { character, editor, rules, showError, clearError } from "../../stores/editor.js";
+import { isAdmin } from "../../stores/auth.js";
 import { clampInt } from "../../character/sanitize.js";
 import { discipline, dots } from "../../character/format.js";
 import RuleLink from "../common/RuleLink.vue";
@@ -27,11 +28,15 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
     <p class="hint">У вас <b>3 очка</b>: уровень дисциплины стоит столько очков, какой он по счёту.
       Можно взять три дисциплины на ур. 1, одну на ур. 2 и одну на ур. 1 — или одну сразу на ур. 3.
       <RuleLink rule="disciplines">Все дисциплины</RuleLink></p>
-    <label class="field bonus-field"><span>Доп. очки Дисциплин от Мастера</span>
-      <input type="number" min="0" :max="CONFIG.maxBonusPoints" inputmode="numeric"
-             :value="character.bonusPoints" @input="setBonus($event.target.value)">
-    </label>
-    <p class="hint" style="margin-top:-8px">На старте 0. После сессий Мастер повышает выживших — добавьте сюда выданные очки.</p>
+    <template v-if="isAdmin()">
+      <label class="field bonus-field"><span>Доп. очки Дисциплин от Мастера</span>
+        <input type="number" min="0" :max="CONFIG.maxBonusPoints" inputmode="numeric"
+               :value="character.bonusPoints" @input="setBonus($event.target.value)">
+      </label>
+      <p class="hint" style="margin-top:-8px">На старте 0. Выдавать очки может только Мастер: откройте персонажа игрока через «Все персонажи» → «Изменить».</p>
+    </template>
+    <p v-else-if="character.bonusPoints" class="bonus-given">Доп. очки Дисциплин от Мастера: <b>+{{ character.bonusPoints }}</b></p>
+    <p v-else class="hint">Дополнительные очки Дисциплин выдаёт Мастер после сессий.</p>
 
     <template v-if="rules.clan()">
       <div class="pool">Очки Дисциплин: <b>{{ pointsLeft() }}</b> из {{ rules.pointsBudget() }} свободно
@@ -65,6 +70,7 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
 
 <style scoped>
 .bonus-field { max-width: 320px; }
+.bonus-given { color: var(--gold); margin: 0 0 16px; }
 .pool { margin-bottom: 16px; }
 .dots { color: var(--blood-bright); letter-spacing: .1em; }
 .disc-list { display: grid; gap: 10px; }

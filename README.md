@@ -31,6 +31,10 @@ npm run build    # сборка в dist/
 | Лист персонажа и шпаргалка | `src/components/sheet/` |
 | Разделы вкладки «Правила» | `src/components/rules/` |
 | Мои / все персонажи | `src/components/roster/` |
+| Блок «В игре» | `src/components/sheet/SessionTracker.vue` |
+| Броски кубиков | `src/stores/rolls.js`, `src/components/dice/` |
+| Режим Мастера | `src/components/master/`, `src/stores/master.js` |
+| История патчей для игроков | `src/data/patches.js` |
 | Оформление: тема, лист, печать | `src/styles/` |
 | Вход и сохранение на сервер | `src/stores/`, `src/api/` |
 

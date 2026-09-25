@@ -7,12 +7,18 @@ import { DISCIPLINE_ATTACKS } from "../../data/disciplines.js";
 import { character, editor, rules, clearError } from "../../stores/editor.js";
 import { fmt, damageFormula, distText, discipline } from "../../character/format.js";
 import RuleLink from "../common/RuleLink.vue";
+import VSelect from "../common/VSelect.vue";
 
 const w = computed(() => rules.weapon());
 const stats = computed(() => w.value && rules.weaponStats(w.value));
 const upgrade = computed(() => w.value && rules.weaponUpgrade(w.value));
 const claws = computed(() => w.value?.id === UNARMED_ID && rules.hasDisc("protean")
   ? DISCIPLINE_ATTACKS.find(x => x.discipline === "protean" && x.level === 1) : null);
+
+const armorOptions = [
+  { value: null, label: "Без брони (КД = 10 + ЛОВ)" },
+  ...ARMOR.map(a => ({ value: a.id, label: `${a.name}: КД ${CONFIG.baseAC + a.ac}`, hint: a.note || "без штрафов" })),
+];
 
 function selectWeapon(id) {
   character.weaponId = id;
@@ -46,12 +52,7 @@ function selectWeapon(id) {
 
     <h3>Броня</h3>
     <label class="field armor-field"><span>На старте брони нет — её выдаёт Мастер в игре</span>
-      <select v-model="character.armorId">
-        <option :value="null">Без брони (КД = 10 + ЛОВ)</option>
-        <option v-for="a in ARMOR" :key="a.id" :value="a.id">
-          {{ a.name }}: КД {{ CONFIG.baseAC + a.ac }}{{ a.note ? ` — ${a.note}` : ", без штрафов" }}
-        </option>
-      </select>
+      <VSelect v-model="character.armorId" :options="armorOptions" />
     </label>
     <div class="error">{{ editor.errors[4] }}</div>
   </div>

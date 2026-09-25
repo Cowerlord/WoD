@@ -5,6 +5,8 @@ import { ARMOR } from "../data/armor.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
 import { blankCharacter } from "./blank.js";
 
+export const NOTES_MAX = 2000;
+
 export const FILE_FORMAT = "vtm-character";
 export const AVATAR_RE = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
 
@@ -12,6 +14,8 @@ export const cleanText = (v, max) => v
   .replace(/[\u0000-\u001f\u007f\u200b-\u200f\u2028-\u202e]/g, "")
   .replace(/\s{2,}/g, " ")
   .slice(0, max);
+
+const cleanNotes = v => String(v ?? "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "").slice(0, NOTES_MAX);
 
 export function clampInt(v, min, max, fallback) {
   const n = Math.trunc(Number(v));
@@ -59,5 +63,16 @@ export function sanitizeCharacter(d) {
 
   out.armorId = ARMOR.some(a => a.id === d.armorId) ? d.armorId : null;
   out.step = clampInt(d.step, 1, TOTAL_STEPS, 1);
+
+  const s = d.session && typeof d.session === "object" ? d.session : {};
+  out.session = {
+    hp: s.hp == null ? null : clampInt(s.hp, 0, 999, null),
+    tempHP: clampInt(s.tempHP, 0, 99, 0),
+    bp: clampInt(s.bp, 0, CONFIG.baseBP, CONFIG.baseBP),
+    humanity: s.humanity == null ? null : clampInt(s.humanity, 0, CONFIG.maxHumanity, null),
+    severe: clampInt(s.severe, 0, 2, 0),
+    used: { heal: !!s.used?.heal, shield: !!s.used?.shield },
+    notes: cleanNotes(s.notes),
+  };
   return out;
 }
