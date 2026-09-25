@@ -3,6 +3,7 @@ import { auth, isAdmin } from "../stores/auth.js";
 import { ui, setMode } from "../stores/ui.js";
 import { roster } from "../stores/roster.js";
 import { logout } from "../stores/session.js";
+import { music, toggleMusic } from "../stores/music.js";
 
 const modes = [
   ["create", "Создание персонажа"],
@@ -14,6 +15,11 @@ const modes = [
 
 <template>
   <header class="app-header">
+    <button v-if="music.available" type="button" class="music" :class="{ off: !music.on }"
+            :title="music.on ? 'Выключить музыку' : 'Включить музыку'"
+            :aria-label="music.on ? 'Выключить музыку' : 'Включить музыку'" @click="toggleMusic">
+      {{ music.on ? "🔊" : "🔇" }}
+    </button>
     <h1>Становление Сородича</h1>
     <template v-if="auth.status === 'in'">
       <div class="modes" role="tablist">
@@ -31,6 +37,13 @@ const modes = [
 </template>
 
 <style scoped>
+.app-header { position: relative; }
+.music {
+  position: absolute; top: 0; right: 0; padding: 6px 10px; font-size: 1.1rem; letter-spacing: 0;
+  border-color: var(--border);
+}
+.music.off { opacity: .6; }
+h1 { padding: 0 44px; }
 .modes { display: flex; justify-content: center; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .modes button { padding: 8px 20px; font-size: .85rem; }
 .modes button.on { background: var(--blood); color: #fff; }

@@ -4,3 +4,4 @@ node_modules/
 *.pdf
 supabase/*.local.sql
 dist/
+PROJECT.md

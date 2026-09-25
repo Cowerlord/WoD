@@ -20,7 +20,8 @@ import { fmt } from "../../character/format.js";
       </tr>
     </tbody></table>
     <p class="surge"><b>{{ BLOOD_SURGE.name }}</b> — бонусное, {{ BLOOD_SURGE.cost }}:
-      +{{ BLOOD_SURGE.scoreBonus }} к любой характеристике (мод. +1) до конца боя.</p>
+      +{{ BLOOD_SURGE.scorePerPotency * character.bloodPotency }} к любой характеристике
+      (мод. +{{ character.bloodPotency }}; это 2 × Сила Крови) до конца боя.</p>
     <div class="hum">
       <span class="lbl">Человечность · на старте {{ character.humanity }}</span>
       <span class="track"><i v-for="n in CONFIG.maxHumanity" :key="n"></i></span>
