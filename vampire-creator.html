@@ -1,0 +1,2478 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Создание Сородича — V:tM × D&amp;D 5e</title>
+<!-- Шрифты подгружаются, если есть интернет; без него сработают запасные системные шрифты -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Cinzel:wght@500;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* =========================================================
+   1. ТЕМА ЭКРАНА (Мир Тьмы)
+   ========================================================= */
+:root {
+  --bg: #0b0708;
+  --bg-panel: #150d0f;
+  --bg-input: #1e1316;
+  --border: #3a1d22;
+  --blood: #8b0000;
+  --blood-bright: #c1121f;
+  --text: #e6d8d3;
+  --text-dim: #9c8a86;
+  --gold: #b89b5e;
+  --font-title: "Cinzel", "Trajan Pro", "Times New Roman", serif;
+  --font-body: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-sheet: "PT Serif", "Times New Roman", serif;   /* цифры обычные по умолчанию — важно для PDF */
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at top, rgba(139,0,0,.25), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(40,0,10,.6), transparent 70%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.45;
+}
+
+.app { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+
+header.app-header { text-align: center; margin-bottom: 24px; }
+header.app-header h1 {
+  font-family: var(--font-title);
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  letter-spacing: .12em;
+  margin: 0;
+  color: var(--blood-bright);
+  text-shadow: 0 0 18px rgba(193,18,31,.45);
+}
+header.app-header p { margin: 4px 0 0; color: var(--text-dim); font-style: italic; }
+
+/* --- Индикатор шагов --- */
+.steps {
+  display: flex; gap: 6px; list-style: none; padding: 0; margin: 0 0 24px;
+  counter-reset: step;
+}
+.steps li {
+  flex: 1; text-align: center; padding: 10px 4px;
+  font-family: var(--font-title); font-size: .78rem; letter-spacing: .06em;
+  border-bottom: 3px solid var(--border); color: var(--text-dim);
+  transition: .2s;
+}
+.steps li::before { counter-increment: step; content: counter(step) ". "; }
+.steps li.active { color: var(--text); border-color: var(--blood-bright); }
+.steps li.done   { color: var(--gold);  border-color: var(--blood); }
+
+/* --- Панели шагов --- */
+.step { display: none; }
+.step.active { display: block; animation: fade .3s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 24px;
+  box-shadow: 0 0 30px rgba(0,0,0,.6), inset 0 0 40px rgba(139,0,0,.08);
+}
+.panel h2 {
+  font-family: var(--font-title); color: var(--blood-bright);
+  margin: 0 0 16px; letter-spacing: .08em; font-size: 1.4rem;
+}
+.panel h3 { font-family: var(--font-title); color: var(--gold); font-size: 1rem; letter-spacing: .06em; margin: 20px 0 8px; }
+.hint { color: var(--text-dim); font-style: italic; margin: -8px 0 16px; }
+
+label.field { display: block; margin-bottom: 14px; }
+label.field .counter { display: block; text-align: right; font-size: .8rem; color: var(--text-dim); margin-top: 2px; }
+label.field .counter.full { color: var(--blood-bright); }
+label.field span { display: block; font-family: var(--font-title); font-size: .8rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 4px; }
+
+input[type=text], textarea, select {
+  width: 100%;
+  background: var(--bg-input); color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 10px 12px; font: inherit;
+}
+input[type=text]:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--blood-bright); box-shadow: 0 0 0 2px rgba(193,18,31,.25);
+}
+select option:disabled { color: #5a4a48; }
+
+/* --- Сетка карточек (кланы, оружие) --- */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.card {
+  position: relative; cursor: pointer;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
+  padding: 12px; text-align: center; transition: .15s;
+  font-family: var(--font-title); font-size: .9rem; letter-spacing: .05em;
+}
+.card:hover { border-color: var(--blood); }
+.card input { position: absolute; opacity: 0; pointer-events: none; }
+.card.selected {
+  border-color: var(--blood-bright); color: #fff;
+  background: linear-gradient(180deg, rgba(139,0,0,.45), rgba(139,0,0,.15));
+  box-shadow: 0 0 14px rgba(193,18,31,.35);
+}
+.card small { display: block; font-family: var(--font-body); font-size: .85rem; color: var(--text-dim); letter-spacing: 0; margin-top: 4px; }
+.card.selected small { color: var(--text); }
+
+.info-box {
+  margin-top: 16px; padding: 16px; border-left: 3px solid var(--blood-bright);
+  background: rgba(139,0,0,.08); min-height: 60px;
+}
+.info-box:empty::before { content: "Выберите клан, чтобы увидеть его описание."; color: var(--text-dim); font-style: italic; }
+.bane { margin: 12px 0 0; padding: 8px 10px; border: 1px dashed var(--blood); border-radius: 4px; }
+.bane b { color: var(--blood-bright); }
+.tag {
+  display: inline-block; margin: 4px 6px 0 0; padding: 2px 10px;
+  border: 1px solid var(--blood); border-radius: 12px; font-size: .9rem; color: var(--gold);
+}
+
+/* --- Характеристики --- */
+.abilities { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+.ability {
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
+  padding: 12px; text-align: center;
+}
+.ability .name { font-family: var(--font-title); font-size: .85rem; color: var(--gold); letter-spacing: .06em; }
+.ability .abbr { font-size: .75rem; color: var(--text-dim); }
+.ability select { margin: 8px 0; text-align: center; }
+.ability .mod { font-family: var(--font-title); font-size: 1.6rem; color: var(--blood-bright); min-height: 1.2em; }
+.pool { margin-bottom: 16px; }
+.pool .chip {
+  display: inline-block; min-width: 38px; padding: 4px 8px; margin: 0 4px 4px 0; text-align: center;
+  border: 1px solid var(--blood); border-radius: 4px; font-family: var(--font-title);
+}
+.pool .chip.used { opacity: .25; text-decoration: line-through; }
+
+/* --- Дисциплины --- */
+.disc-list { display: grid; gap: 10px; }
+.disc {
+  display: flex; gap: 12px; align-items: flex-start; cursor: pointer;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 12px;
+}
+.disc.selected { border-color: var(--blood-bright); background: rgba(139,0,0,.2); }
+.disc { cursor: default; }
+.disc-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lvl-picker { display: inline-flex; gap: 4px; }
+.lvl-picker button { padding: 4px 12px; font-size: .85rem; min-width: 38px; }
+.lvl-picker button.on { background: var(--blood); color: #fff; }
+.disc p.lvl.not-owned { opacity: .4; }
+.dots { color: var(--blood-bright); letter-spacing: .1em; }
+.disc input { margin-top: 5px; accent-color: var(--blood-bright); width: 18px; height: 18px; }
+.disc b { font-family: var(--font-title); letter-spacing: .05em; }
+.disc p { margin: 4px 0 0; color: var(--text-dim); }
+.disc p.lvl b { font-family: var(--font-body); color: var(--text); letter-spacing: 0; }
+.lvl-n { display: inline-block; min-width: 3.2em; font-family: var(--font-title); font-size: .75rem; color: var(--blood-bright); }
+
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+.stat {
+  text-align: center; padding: 14px 8px; border: 1px solid var(--blood); border-radius: 4px;
+  background: radial-gradient(circle, rgba(139,0,0,.25), transparent 70%);
+}
+.stat .val { font-family: var(--font-title); font-size: 2rem; color: #fff; }
+.stat .lbl { font-size: .85rem; color: var(--gold); font-family: var(--font-title); letter-spacing: .06em; }
+.stat .formula { font-size: .8rem; color: var(--text-dim); }
+
+/* --- Ошибки и навигация --- */
+.error {
+  margin-top: 16px; padding: 10px 14px; border: 1px solid var(--blood-bright);
+  background: rgba(193,18,31,.15); color: #ffb3b3; border-radius: 4px;
+}
+.error:empty { display: none; }
+
+.nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; }
+button {
+  font-family: var(--font-title); letter-spacing: .08em; font-size: .95rem;
+  padding: 12px 26px; border-radius: 4px; cursor: pointer; transition: .15s;
+  border: 1px solid var(--blood-bright); background: transparent; color: var(--text);
+}
+button:hover { background: rgba(193,18,31,.2); }
+button.primary { background: var(--blood); color: #fff; }
+button.primary:hover { background: var(--blood-bright); }
+button:disabled { opacity: .35; cursor: not-allowed; }
+.export-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.export-row button.big { flex: 1 1 200px; width: auto; }
+button.big { display: block; width: 100%; font-size: 1.2rem; padding: 18px; margin-bottom: 20px;
+  box-shadow: 0 0 24px rgba(193,18,31,.4); }
+.nav .spacer { flex: 1; }
+
+/* --- Переключатель режимов --- */
+.modes { display: flex; justify-content: center; gap: 8px; margin-top: 16px; }
+.modes button { padding: 8px 20px; font-size: .85rem; }
+.modes button.on { background: var(--blood); color: #fff; }
+.rule-link {
+  background: none; border: 0; padding: 0; font: inherit; font-style: italic;
+  color: var(--gold); text-decoration: underline dotted; cursor: pointer; letter-spacing: 0;
+}
+.rule-link:hover { background: none; color: var(--blood-bright); }
+
+/* --- Режим «Правила» --- */
+.rules { display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start; }
+.rules-toc {
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px);
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 12px;
+}
+.rules-toc a {
+  display: block; padding: 6px 8px; border-radius: 3px; text-decoration: none;
+  color: var(--text-dim); font-family: var(--font-title); font-size: .8rem; letter-spacing: .05em;
+}
+.rules-toc a:hover { color: var(--text); background: rgba(139,0,0,.2); }
+.rules-body .panel { margin-bottom: 16px; scroll-margin-top: 12px; }
+.rules-body p { margin: 0 0 10px; }
+.rules-body ul { margin: 0 0 10px; padding-left: 22px; }
+.rules-body table { width: 100%; border-collapse: collapse; margin: 6px 0 12px; font-size: .95rem; }
+.rules-body th, .rules-body td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+.rules-body th { background: rgba(139,0,0,.2); font-family: var(--font-title); font-size: .75rem; letter-spacing: .06em; color: var(--gold); }
+.rules-body .table-wrap { overflow-x: auto; }
+.rules-body .entry { border-left: 3px solid var(--blood); padding: 4px 0 4px 12px; margin-bottom: 14px; }
+.rules-body .entry b.title { font-family: var(--font-title); color: var(--text); letter-spacing: .05em; }
+.rules-body .entry p.lvl b { color: var(--text); }
+.rules-body .todo { color: var(--text-dim); font-style: italic; }
+@media (max-width: 760px) {
+  .rules { grid-template-columns: 1fr; }
+  .rules-toc { position: static; }
+}
+
+/* =========================================================
+   2. ЛИСТ ПЕРСОНАЖА И ШПАРГАЛКА (общие для экрана, печати и PDF)
+   Лист рассчитан на 1 страницу А4: 190 × 277 мм при полях 10 мм.
+   ========================================================= */
+.sheet {
+  background: #f4ede4; color: #1a1112;
+  padding: 12mm 10mm; margin: 0 auto;
+  width: 100%; max-width: 210mm;
+  font-family: var(--font-sheet); font-size: 11pt; line-height: 1.35;
+  font-variant-numeric: lining-nums tabular-nums;   /* обычные цифры вместо «старинных» */
+  font-feature-settings: "lnum" 1, "tnum" 1;
+  box-shadow: 0 0 40px rgba(0,0,0,.8);
+}
+.sheet h1 { font-family: var(--font-title); font-size: 16pt; margin: 0; color: #6b0000; letter-spacing: .06em; }
+.sheet h2 {
+  font-family: var(--font-title); font-size: 9.5pt; letter-spacing: .1em; text-transform: uppercase;
+  margin: 10px 0 5px; padding-bottom: 2px; border-bottom: 1px solid #6b0000; color: #6b0000;
+}
+.sheet .lbl { display: block; font-family: var(--font-title); font-size: 7pt; text-transform: uppercase; letter-spacing: .08em; color: #555; }
+.sheet section { break-inside: avoid; page-break-inside: avoid; }
+.sheet .blank { display: inline-block; min-width: 16mm; border-bottom: 1px solid #1a1112; }
+.sheet .track { display: inline-flex; gap: 4px; vertical-align: middle; }
+.sheet .track i, .sheet .box { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #1a1112; vertical-align: middle; }
+.sheet .lines div { border-bottom: 1px solid #999; height: 18px; }
+
+/* Блок 1: шапка в одну строку */
+.sh-head {
+  display: grid; grid-template-columns: 1.5fr 2.2fr 1fr .8fr .7fr; gap: 10px; align-items: end;
+  border-bottom: 2px solid #6b0000; padding-bottom: 6px;
+}
+.sh-head > div { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+.sh-name { font-family: var(--font-title); font-size: 15pt; font-weight: 700; color: #6b0000; line-height: 1.1; }
+.sh-name.long { font-size: 11pt; }
+
+/* Блоки 2–4: три колонки */
+.sh-cols { display: grid; grid-template-columns: 1fr 1fr 1.7fr; gap: 12px; }
+.sh-cols > section { min-width: 0; }
+
+.ab-table { width: 100%; border-collapse: collapse; }
+.ab-table td { border-bottom: 1px solid #bbb; padding: 3px 4px; }
+.ab-table .ab-n { font-family: var(--font-title); font-size: 9.5pt; letter-spacing: .04em; }
+.ab-table td { padding: 5px 4px; }
+.ab-table .ab-v { text-align: center; }
+.ab-table .ab-m { text-align: right; font-weight: 700; font-size: 15pt; }
+.surge { font-size: 10pt; margin: 6px 0 0; padding: 5px 6px; border: 1px dashed #6b0000; }
+
+.cb { border: 1.5px solid #1a1112; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; }
+.cb .row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.cb .v { font-size: 20pt; font-weight: 700; line-height: 1.1; }
+.cb .note { font-size: 9.5pt; }
+
+.dsc { margin-bottom: 8px; }
+.dsc-name { font-family: var(--font-sheet); font-weight: 700; font-size: 11.5pt; color: #6b0000; }
+.dsc p { margin: 2px 0 0; font-size: 10.5pt; }
+.dsc .lv { font-weight: 700; color: #6b0000; }
+.dsc .atk { font-size: 10pt; padding-left: 6px; border-left: 2px solid #6b0000; }
+
+/* Блок 5: оружие */
+.wp { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr 2fr; gap: 10px; border: 1.5px solid #1a1112; border-radius: 6px; padding: 6px 8px; }
+.wp > div { min-width: 0; }
+.wp .big { font-size: 12.5pt; font-weight: 700; }
+
+/* Шпаргалка */
+.cheat table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
+.cheat th, .cheat td { border: 1px solid #555; padding: 3px 6px; text-align: left; vertical-align: top; }
+.cheat th { background: #e2d6c8; font-family: var(--font-title); font-size: 7.5pt; letter-spacing: .06em; text-transform: uppercase; }
+.cheat tr.current td { background: rgba(193,18,31,.2); font-weight: 700; }
+.cheat ul { margin: 0; padding-left: 18px; }
+.cheat li { margin-bottom: 3px; }
+
+/* Экспорт в PDF — те же правила, что и для печати */
+.sheet.pdf-export { background: #fff; color: #000; box-shadow: none; padding: 0; width: 190mm; max-width: none; }
+.sheet.pdf-export * { color: #000 !important; }
+.sheet.pdf-export h2, .sheet.pdf-export .sh-head { border-color: #000; }
+.sheet.pdf-export th { background: #eee; }
+.sheet.pdf-export tr.current td { background: none; font-weight: inherit; }
+.info-box { overflow-wrap: anywhere; word-break: break-word; }
+
+html.pdf-busy, html.pdf-busy body { overflow: hidden; }
+
+/* Портрет */
+.avatar-field { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+.avatar-preview {
+  width: 96px; height: 120px; flex: 0 0 auto; border: 1px dashed var(--blood); border-radius: 4px;
+  background: var(--bg-input) center / cover no-repeat;
+}
+.field-lbl { display: block; font-family: var(--font-title); font-size: .8rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 6px; }
+.export-row button:not(.big) { padding: 8px 16px; }
+.bonus-field { max-width: 320px; }
+.skill-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.skill-pick { flex: 1 1 220px; }
+.clan-skill { margin: 0 0 10px; }
+.armor-field { max-width: 480px; }
+.sheet .sk-table td { padding: 3px 4px; font-size: 10pt; }
+.sheet .sk-table .ab-m { font-size: 12pt; }
+.sheet .portrait {
+  height: 46mm; border: 1.5px solid #1a1112; border-radius: 6px; margin: 0 0 6px;
+  background: #fff center / cover no-repeat; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px;
+}
+.sheet .hum { margin-top: 6px; border: 1.5px solid #1a1112; border-radius: 6px; padding: 4px 8px; }
+.sheet .hum .sq { letter-spacing: .12em; font-size: 11pt; }
+
+/* Мои персонажи */
+.roster { display: grid; gap: 10px; margin-top: 16px; }
+.roster-card {
+  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+  background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 10px;
+}
+.roster-ava { width: 48px; height: 60px; flex: 0 0 auto; border: 1px dashed var(--blood); border-radius: 3px; background: center / cover no-repeat; }
+.roster-info { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; }
+.roster-info b { font-family: var(--font-title); letter-spacing: .04em; display: block; }
+.roster-info small { color: var(--text-dim); }
+.roster-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.roster-actions button { padding: 6px 12px; font-size: .8rem; }
+.roster-actions button.danger { border-color: #ff6b6b; color: #ffb3b3; }
+#steps li { cursor: pointer; }
+
+/* Панель шпаргалки на экране */
+#cheat-block { margin-top: 32px; }
+.cur-hp { max-width: 320px; }
+input[type=number] {
+  width: 100%; background: var(--bg-input); color: var(--text);
+  border: 1px solid var(--border); border-radius: 4px; padding: 10px 12px; font: inherit;
+}
+
+/* =========================================================
+   3. АДАПТИВ
+   ========================================================= */
+@media (max-width: 640px) {
+  .steps li { font-size: 0; }
+  .steps li::before { font-size: .8rem; }
+  .stat-row { grid-template-columns: 1fr; }
+  .sheet:not(.pdf-export) { padding: 8mm 5mm; }
+  .sheet:not(.pdf-export) .sh-head, .sheet:not(.pdf-export) .wp { grid-template-columns: 1fr 1fr; }
+  .sheet:not(.pdf-export) .sh-cols { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   4. ПЕЧАТЬ / PDF (А4)
+   ========================================================= */
+@page { size: A4 portrait; margin: 10mm; }
+
+@media print {
+  html, body {
+    background: #fff !important; color: #000 !important;
+    margin: 0; padding: 0; font-size: 11pt;
+  }
+  /* Скрываем весь интерфейс, оставляем только лист */
+  .app-header, .steps, .nav, .no-print, .error, button { display: none !important; }
+  body.mode-rules #mode-create, body:not(.mode-rules) #mode-rules, #mode-roster { display: none !important; }
+  /* Печать правил */
+  .rules { display: block; }
+  .rules-toc { display: none !important; }
+  .rules-body .panel { background: none !important; border: 0; box-shadow: none; padding: 0; margin-bottom: 8mm; }
+  .rules-body, .rules-body * { color: #000 !important; }
+  .rules-body th { background: #eee !important; }
+  .rules-body th, .rules-body td { border-color: #555 !important; }
+  .rules-body .entry, .rules-body tr { break-inside: avoid; page-break-inside: avoid; }
+  .app { max-width: none; padding: 0; margin: 0; }
+  .step { display: none !important; }
+  #step-5 { display: block !important; animation: none; }
+  #step-5 > .panel { background: none; border: 0; box-shadow: none; padding: 0; }
+
+  .sheet {
+    background: #fff !important; color: #000 !important;
+    box-shadow: none; padding: 0; margin: 0;
+    width: 100%; max-width: none;          /* ширину задаёт @page: 210 − 2×10 = 190 мм */
+  }
+  .sheet * { color: #000 !important; }
+  .sheet h2, .sheet .sh-head { border-color: #000 !important; }
+  .sheet th { background: #eee !important; }
+  .sheet .sh-head { grid-template-columns: 1.5fr 2.2fr 1fr .8fr .7fr !important; }
+  .sheet .sh-cols { grid-template-columns: 1fr 1fr 1.7fr !important; }
+  .sheet .wp { grid-template-columns: 1.3fr 1fr 1.3fr 2fr !important; }
+  .cheat tr.current td { background: none !important; font-weight: inherit !important; }
+  #step-5 .panel > h2 { display: none; }
+  /* Лист и шпаргалка печатаются по отдельности */
+  body:not(.print-cheat) #cheat-block { display: none !important; }
+  body.print-cheat #sheet-block { display: none !important; }
+  #cheat-block { margin: 0; }
+
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="app-header">
+    <h1>Становление Сородича</h1>
+    <div class="modes" role="tablist">
+      <button type="button" id="mode-btn-create" class="on">Создание персонажа</button>
+      <button type="button" id="mode-btn-roster">Мои персонажи</button>
+      <button type="button" id="mode-btn-rules">Правила</button>
+    </div>
+  </header>
+
+  <!-- РЕЖИМ «ПРАВИЛА» (только чтение) -->
+  <div id="mode-rules" hidden>
+    <div class="rules">
+      <nav class="rules-toc" id="rules-toc"></nav>
+      <div class="rules-body" id="rules-body"></div>
+    </div>
+  </div>
+
+  <!-- РЕЖИМ «МОИ ПЕРСОНАЖИ» -->
+  <div id="mode-roster" hidden>
+    <div class="panel">
+      <h2>Мои персонажи</h2>
+      <p class="hint">Персонажи сохраняются в этом браузере автоматически. Чтобы перенести персонажа на другой компьютер
+        или отдать Мастеру — сохраните его в файл и загрузите там через «Импорт».</p>
+      <div class="export-row">
+        <button type="button" class="primary" id="btn-new-char">+ Новый персонаж</button>
+        <button type="button" id="btn-import">📂 Импорт из файла</button>
+        <input type="file" id="import-file" accept=".json,application/json" hidden>
+      </div>
+      <div class="error" id="err-roster"></div>
+      <div class="roster" id="roster-list"></div>
+    </div>
+  </div>
+
+  <!-- РЕЖИМ «СОЗДАНИЕ» -->
+  <div id="mode-create">
+
+  <ol class="steps" id="steps">
+    <li>Клан</li>
+    <li>Характеристики</li>
+    <li>Дисциплины</li>
+    <li>Оружие</li>
+    <li>Лист</li>
+  </ol>
+
+  <!-- ШАГ 1 -->
+  <div class="step" id="step-1">
+    <div class="panel">
+      <h2>Кто ты, дитя ночи?</h2>
+      <label class="field"><span>Имя</span>
+        <input type="text" id="char-name" placeholder="Например: Виктор Ланской">
+        <small class="counter" id="char-name-count"></small>
+      </label>
+      <label class="field"><span>Концепт</span>
+        <input type="text" id="char-concept" placeholder="Например: Бывший следователь, потерявший веру">
+        <small class="counter" id="char-concept-count"></small>
+      </label>
+      <div class="avatar-field">
+        <div class="avatar-preview" id="avatar-preview"></div>
+        <div>
+          <span class="field-lbl">Портрет</span>
+          <div class="export-row">
+            <button type="button" id="btn-avatar">🖼 Загрузить картинку</button>
+            <button type="button" id="btn-avatar-clear" hidden>Убрать</button>
+          </div>
+          <input type="file" id="avatar-file" accept="image/*" hidden>
+          <p class="hint" style="margin:6px 0 0">Без картинки на листе будет пустая рамка — портрет можно нарисовать от руки.</p>
+        </div>
+      </div>
+      <label class="field"><span>Человечность</span>
+        <select id="char-humanity"></select>
+      </label>
+      <label class="field"><span>Поколение</span>
+        <select id="char-generation"></select>
+      </label>
+      <p class="hint">Все персонажи начинают Неофитами с Силой Крови 1.
+        <button type="button" class="rule-link" data-rule="generations">Что такое Поколение?</button></p>
+      <h3>Клан</h3>
+      <div class="card-grid" id="clan-grid"></div>
+      <div class="info-box" id="clan-info"></div>
+      <div class="error" id="err-1"></div>
+    </div>
+  </div>
+
+  <!-- ШАГ 2 -->
+  <div class="step" id="step-2">
+    <div class="panel">
+      <h2>Характеристики</h2>
+      <p class="hint">Распределите значения из массива. Каждое число можно использовать только один раз.
+        <button type="button" class="rule-link" data-rule="basics">Как считаются модификаторы?</button></p>
+      <div class="pool" id="pool"></div>
+      <div class="abilities" id="abilities"></div>
+      <div class="error" id="err-2"></div>
+    </div>
+  </div>
+
+  <!-- ШАГ 3 -->
+  <div class="step" id="step-3">
+    <div class="panel">
+      <h2>Дисциплины</h2>
+      <p class="hint">У вас <b>3 очка</b>: уровень дисциплины стоит столько очков, какой он по счёту.
+        Можно взять три дисциплины на ур. 1, одну на ур. 2 и одну на ур. 1 — или одну сразу на ур. 3.
+        <button type="button" class="rule-link" data-rule="disciplines">Все дисциплины</button></p>
+      <label class="field bonus-field"><span>Доп. очки Дисциплин от Мастера</span>
+        <input type="number" id="bonus-points" min="0" inputmode="numeric" value="0">
+      </label>
+      <p class="hint" style="margin-top:-8px">На старте 0. После сессий Мастер повышает выживших — добавьте сюда выданные очки.</p>
+      <div class="pool" id="disc-points"></div>
+      <div class="disc-list" id="disc-list"></div>
+      <h3>Навыки</h3>
+      <p class="hint">Клан даёт один навык на +2. Выберите ещё два: один на +2, другой на +1.
+        Проверка навыка = d20 + мод. характеристики + бонус навыка.</p>
+      <div id="skills-box"></div>
+      <h3>Боевые параметры</h3>
+      <div class="stat-row" id="combat-preview"></div>
+      <div class="error" id="err-3"></div>
+    </div>
+  </div>
+
+  <!-- ШАГ 4 -->
+  <div class="step" id="step-4">
+    <div class="panel">
+      <h2>Оружие</h2>
+      <p class="hint">Выберите оружие, с которым ваш персонаж выходит в ночь.
+        <button type="button" class="rule-link" data-rule="weapons">Таблица оружия</button></p>
+      <div class="card-grid" id="weapon-grid"></div>
+      <div class="info-box" id="weapon-info"></div>
+      <h3>Броня</h3>
+      <label class="field armor-field"><span>На старте брони нет — её выдаёт Мастер в игре</span>
+        <select id="armor-select"></select>
+      </label>
+      <div class="error" id="err-4"></div>
+    </div>
+  </div>
+
+  <!-- ШАГ 5 -->
+  <div class="step" id="step-5">
+    <div class="panel">
+      <div id="sheet-block">
+        <div class="export-row">
+          <button class="primary big" id="btn-pdf" type="button">🩸 Скачать лист PDF</button>
+          <button class="big" id="btn-print" type="button">🖨 Распечатать лист</button>
+          <button class="big" id="btn-export" type="button">💾 Сохранить в файл</button>
+        </div>
+        <div class="sheet" id="sheet"></div>
+      </div>
+
+      <div id="cheat-block">
+        <h2 class="no-print">Шпаргалка по правилам</h2>
+        <p class="hint no-print">Отдельный лист со стадиями ранений, слабостью клана и правилами питания.</p>
+        <div class="export-row">
+          <button class="primary big" id="btn-pdf-cheat" type="button">📜 Скачать шпаргалку PDF</button>
+          <button class="big" id="btn-print-cheat" type="button">🖨 Распечатать шпаргалку</button>
+        </div>
+        <label class="field cur-hp no-print"><span>Текущие HP — подсветит стадию ранения</span>
+          <input type="number" id="cur-hp" min="0" inputmode="numeric" placeholder="например, 9">
+        </label>
+        <div class="sheet cheat" id="cheat"></div>
+      </div>
+      <div class="error" id="err-5"></div>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button type="button" id="btn-back">← Назад</button>
+    <button type="button" id="btn-reset" class="no-print">+ Новый персонаж</button>
+    <span class="spacer"></span>
+    <button type="button" id="btn-next" class="primary">Далее →</button>
+  </div>
+  </div><!-- /mode-create -->
+
+</div>
+
+<script>
+/* =========================================================
+   ДАННЫЕ — ЗАПОЛНИТЕ ЛОРОМ
+   Весь текст приложения хранится здесь. Логику ниже трогать не нужно.
+   ========================================================= */
+
+const CONFIG = {
+  abilityArray: [15, 14, 13, 12, 10, 8], // фиксированный массив значений
+  nameMaxLength: 40,                     // лимиты ввода, чтобы не ломать вёрстку листа
+  conceptMaxLength: 80,
+  disciplinePoints: 3,                   // очки Дисциплин: уровень N стоит N очков, тратятся все
+  maxDisciplineLevel: 3,
+  baseSpeed: 1,                          // Скорость: 1–3 (сколько дистанции «съедается» бесплатно), см. SPEED_RULES
+  minSpeed: 1,
+  maxSpeed: 3,
+  saveDCBase: 8,                         // Сложность спасбросков против Дисциплин = 8 + мод.
+  baseHP: 16,
+  hpConMultiplier: 2,                    // HP = 16 + 2 × мод. Выносливости
+  startingHumanity: 6,                   // Человечность на старте у всех
+  maxHumanity: 10,
+  maxBonusPoints: 12,                    // доп. очки Дисциплин, которые Мастер выдаёт после сессий
+  baseAC: 10,
+  baseBP: 5,                             // ПК фиксированно 5 у неофитов
+  generationOptions: [13, 12],           // стартовые Поколения неофитов (первое — по умолчанию)
+  startingBloodPotency: 1,
+};
+
+// Характеристики. key используется в формулах и в полях оружия (ability).
+const ABILITIES = [
+  { key: "str", name: "Сила",      abbr: "СИЛ" },
+  { key: "dex", name: "Ловкость",  abbr: "ЛОВ" },
+  { key: "con", name: "Выносливость", abbr: "ВЫН" },
+  { key: "int", name: "Интеллект", abbr: "ИНТ" },
+  { key: "wis", name: "Восприятие",  abbr: "ВОС" },
+  { key: "cha", name: "Харизма",   abbr: "ХАР" },
+];
+
+// ЛОР в формате JSON — можно вставлять присланные данные напрямую.
+// clans:       id → { name, subName, description, disciplines: [3 id дисциплин], bane: { name, text } }
+// disciplines: id → { name, levels: { "1": "...", "2": "...", "3": "..." } }
+const LORE = {
+  "clans": {
+    "brujah": {
+      "name": "Бруха",
+      "subName": "Бунтари и Идеалисты",
+      "description": "В древности они были кланом философов и царей, но сегодня Бруха — это яростные панки, бунтари, байкеры и революционеры. Они не терпят авторитетов, первыми лезут в драку и яростно защищают свою свободу. Самый взрывной и физически опасный клан.",
+      "disciplines": ["celerity", "potence", "presence"],
+      "bane": {"name": "Слабость клана", "text": "Помеха на спасброски Восприятия против Бешенства, если персонажа оскорбляют или провоцируют."}
+    },
+    "gangrel": {
+      "name": "Гангрел",
+      "subName": "Дикари и Выживальщики",
+      "description": "Одиночки, которые предпочитают ночные парки, леса и заброшенные промзоны душным вампирским клубам. Они ближе всех подобрались к своей звериной сути. Гангрелы — лучшие выживальщики, способные переносить любые ранения и путешествовать без укрытий.",
+      "disciplines": ["animalism", "fortitude", "protean"],
+      "bane": {"name": "Слабость клана", "text": "Если ПК падают до 0, вампир автоматически впадает в Голодное Безумие без спасброска. После того как он насытится, ГМ управляет им ещё 1 раунд (Зверь не сразу отпускает тело). На следующую ночь он получает животную черту лица (−2 к Харизме с людьми)."}
+    },
+    "malkavian": {
+      "name": "Малкавиан",
+      "subName": "Безумные Провидцы",
+      "description": "Каждый член этого клана неизлечимо безумен, но их сумасшествие — это плата за мистическое видение сути вещей. Они подключены к общему 'психическому радио' и видят тайны, скрытые от других. Окружающие их боятся и считают непредсказуемыми психами.",
+      "disciplines": ["auspex", "obfuscate", "dementation"],
+      "bane": {"name": "Слабость клана", "text": "Начинает игру с неизлечимым ментальным расстройством (фобия, паранойя, голоса в голове). В стрессовых ситуациях или при триггере ГМ требует спасбросок Восприятия. При провале — приступ на 1 минуту: персонаж паникует, атакует воображаемых врагов или замирает."}
+    },
+    "nosferatu": {
+      "name": "Носферату",
+      "subName": "Уродливые Шпионы",
+      "description": "Проклятие крови физически искажает Носферату, превращая их в жутких монстров, которые не могут показаться людям без маскировки. Из-за этого они живут в канализациях и подземных туннелях. Они — главные торговцы секретами и хакеры в мире вампиров.",
+      "disciplines": ["animalism", "potence", "obfuscate"],
+      "bane": {"name": "Слабость клана", "text": "Модификатор Харизмы для проверок Убеждения/Обаяния с обычными людьми всегда равен −5. Показать истинное лицо человеку без маскировки — автоматическое нарушение Маскарада и вызов полиции/охотников."}
+    },
+    "toreador": {
+      "name": "Тореадор",
+      "subName": "Вырожденцы и Аристократы",
+      "description": "Красивые, утонченные, одержимые искусством, модой и человеческими эмоциями. Они одержимы эстетикой и часто влюбляются в смертных творцов. Мастера светских интриг, которые правят ночной жизнью города через элитные ночные клубы.",
+      "disciplines": ["auspex", "celerity", "presence"],
+      "bane": {"name": "Слабость клана", "text": "Увидев произведение искусства, выдающуюся красоту или грациозный танец, персонаж обязан пройти спасбросок Восприятия (Сложность 12). При провале он замирает в восхищении на 1 минуту (или пока не получит урон). В бою это полный пропуск хода."}
+    },
+    "tremere": {
+      "name": "Тремер",
+      "subName": "Маги Крови",
+      "description": "Когда-то они были орденом смертных магов, но предали человечество и украли секрет бессмертия у вампиров с помощью ритуалов. Тремер — замкнутый, жестко структурированный клан чернокнижников. Другие вампиры им не доверяют, но уважают за их колдовство.",
+      "disciplines": ["auspex", "dominate", "thaumaturgy"],
+      "bane": {"name": "Проклятие Пирамиды", "text": "Уязвимы к Узам Крови: достаточно двух глотков чужой крови вместо трёх, чтобы стать рабом. Ментально связаны со своим клановым Сиром (руководителем Капеллы): на его прямой приказ Тремер обязан пройти спасбросок Восприятия (Сложность 15), чтобы ослушаться. При провале выполняет приказ как марионетка."}
+    },
+    "ventrue": {
+      "name": "Вентру",
+      "subName": "Аристократы и Правители",
+      "description": "'Голубая кровь' вампирского мира. Они считают себя королями всех Сородичей. Среди них — банкиры, политики и серые кардиналы. Вентру соблюдают строгий кодекс, но могут пить кровь только определенного типа людей.",
+      "disciplines": ["dominate", "fortitude", "presence"],
+      "bane": {"name": "Утончённый вкус", "text": "Могут пить кровь только высшего общества (олигархи, политики, топ-модели, знаменитости). При попытке выпить кровь бомжа, бандита или обычного работяги Вентру мгновенно тошнит: урон жертве наносится, но ПК не восстанавливаются."}
+    },
+    "lasombra": {
+      "name": "Ласомбра",
+      "subName": "Владыки Бездны",
+      "description": "Безжалостные прагматики. Если Вентру правят с помощью законов, то Ласомбра правят с помощью страха. Они верят, что власть принадлежит сильнейшему. Их главная фишка — мистическая связь с Бездной, откуда они черпают живую тьму.",
+      "disciplines": ["dominate", "potence", "obtenebration"],
+      "bane": {"name": "Отвергнутые светом", "text": "Не отражаются в зеркалах и на видеокамерах (вместо них — плывущее пятно тьмы). Из-за связи с Бездной получают утроенный (×3) урон от Огня и Солнечного света вместо обычного двойного."}
+    },
+    "tzimisce": {
+      "name": "Цимисхи",
+      "subName": "Изверги и Создатели Монстров",
+      "description": "Древние и пугающие хозяева замков. Они одержимы изменением плоти и видят в живых телах лишь глину. Могут превратить себя в жуткое чудовище или создать из пленных людей верных слуг-мутантов (Шляхтичей).",
+      "disciplines": ["animalism", "auspex", "vicissitude"],
+      "bane": {"name": "Привязанность к родной земле", "text": "Обязаны спать в гробу/постели с горстью земли с родных земель (или места Становления). Если ночуют без неё — на следующую ночь физически слабеют и вообще не могут восстанавливать HP (ни лечением за ПК, ни отдыхом)."}
+    }
+  },
+  "disciplines": {
+    "celerity": {
+      "name": "Стремительность",
+      "levels": {
+        "1": "Активный [1 ПК]: Бонусное действие — «Рывок»: +1 к Скорости до конца хода и преимущество на первую атаку в этот ход.",
+        "2": "Пассивный: +3 к Инициативе, +1 к КД. Все проверки Ловкости и броски Инициативы совершаются с преимуществом.",
+        "3": "Усиление активного [1 ПК]: «Рывок» даёт Скорость 3 до конца хода (дистанции не важны) и дополнительную атаку в этот ход."
+      }
+    },
+    "fortitude": {
+      "name": "Стойкость Крови",
+      "levels": {
+        "1": "Активный [1 ПК]: Бонусное действие — получить Временные Хитпоинты ('Щит Брони') в размере [5 + мод. Выносливости]. Огонь/УФ игнорируют щит.",
+        "2": "Пассивный: +5 к максимальному запасу HP, иммунитет к эффекту 'Оглушение'. Все проверки Выносливости совершаются с преимуществом.",
+        "3": "Усиление активного [1 ПК]: Щит Брони теперь дает [10 + мод. Выносливости] Временных Хитов. Пока щит активен, вы полностью игнорируете штрафы 'Стадий Ранений'."
+      }
+    },
+    "potence": {
+      "name": "Могущество",
+      "levels": {
+        "1": "Активный [1 ПК]: Ваша следующая успешная атака в упор (дистанция 1) гарантированно наносит максимальный урон по кубам (без броска).",
+        "2": "Пассивный: Базовый урон с кулака увеличивается до 1d8 + Сила. Все проверки Силы совершаются с преимуществом.",
+        "3": "Усиление активного [1 ПК]: Успешный удар наносит максимальный урон + дополнительные 2d6 дробящего урона, а цель отлетает на 1 дистанцию назад и падает плашмя."
+      }
+    },
+    "animalism": {
+      "name": "Анимализм",
+      "levels": {
+        "1": "Активный [1 ПК]: Бонусное действие — призвать рой мышей/крыс на дист. 2 или 3. Враги в зоне атакуют с помехой и получают 1d4 урона в начале своего хода. Живет 1 раунд.",
+        "2": "Пассивный: Звери не атакуют первым. Можно потратить 1 ПК, чтобы призвать крупное животное и временно переселить в него разум. Все проверки Восприятия и обнаружения засад идут с преимуществом.",
+        "3": "Усиление активного [2 ПК]: Рой наносит 2d4 урона в раунд и насильно прогоняет цель на 1 дистанцию назад (бегство в панике)."
+      }
+    },
+    "auspex": {
+      "name": "Прорицание",
+      "levels": {
+        "1": "Активный [1 ПК]: Действие — прочитать поверхностные мысли существа на дист. 2 или 3. Позволяет видеть невидимок в пределах видимости.",
+        "2": "Пассивный: Вы видите скрытые ловушки, тайные двери и магические потоки. Все проверки Интеллекта, Оккультизма и Внимательности идут с преимуществом.",
+        "3": "Усиление активного [1 ПК]: Ментальное сканирование. Вы читаете мысли врага столь глубоко, что предугадываете его движения: первая атака по цели в бою гарантированно идет с преимуществом, а критический удар по ней до конца боя срабатывает на 18, 19 или 20."
+      }
+    },
+    "obfuscate": {
+      "name": "Затемнение",
+      "levels": {
+        "1": "Активный [1 ПК]: Стать невидимым до конца следующего хода. Слетает при атаке или активации другой Дисциплины.",
+        "2": "Пассивный: Обычные люди и камеры не замечают вас, если вы не действуете агрессивно. Все проверки Ловкости (Скрытность) идут с преимуществом.",
+        "3": "Усиление активного [2 ПК]: Идеальная невидимость длится, пока вы её не сбросите, но спадает МГНОВЕННО в момент любой атаки или использования активной Дисциплины. Гарантированный двойной урон (и преимущество) даётся только на один первый удар из засады. Невидимость можно включить повторно за 2 ПК."
+      }
+    },
+    "dominate": {
+      "name": "Доминирование",
+      "levels": {
+        "1": "Активный [1 ПК]: Действие — приказ из 1 слова на дист. 1-2 при зрит. контакте. Спасбросок Восприятия или цель пропускает ход. Не работает на Оборотней и сильных Сородичей.",
+        "2": "Пассивный: Ваш разум защищен от внушений. Проверки Харизмы (Обман/Запугивание) тет-а-тет и спасброски против ментальных атак идут с преимуществом.",
+        "3": "Усиление активного [2 ПК]: Приказ может быть сложной фразой ('Атакуй напарника', 'Брось оружие'). Цель подчиняется, даже если это нанесет ей вред."
+      }
+    },
+    "presence": {
+      "name": "Присутствие",
+      "levels": {
+        "1": "Активный [1 ПК]: Действие — 'Взгляд Ужаса'. Враги на дист. 1-2 делают спасбросок Восприятия. При провале не могут подойти на дист. 1 и атакуют вас с помехой. 1 раунд.",
+        "2": "Пассивный: Аура величия. Все проверки Харизмы (Убеждение/Исполнение) при взаимодействии с толпой или группами людей совершаются с преимуществом. Враги совершают броски Инициативы против вас с помехой, робея перед вашим величием.",
+        "3": "Усиление активного [1 ПК]: Взгляд Ужаса усиливается до Абсолютного Величия. Провалившие спасбросок падают на колени и не могут атаковать вас 1 минуту (или до получения урона)."
+      }
+    },
+    "dementation": {
+      "name": "Помешательство",
+      "levels": {
+        "1": "Активный [1 ПК]: Действие — прошептать безумную мысль цели на дист. 1-2 (она должна вас слышать). Спасбросок Восприятия или цель пропускает ход, дико хохоча или паникуя. Не работает на Сородичей с более высокой Силой Крови.",
+        "2": "Пассивный: Непредсказуемость. Защита от ментального сканирования (Прорицание выдает бред). Проверки Восприятия (Проницательность) по вам делаются с помехой.",
+        "3": "Усиление активного [2 ПК]: Цель делает спасбросок Восприятия. При провале она теряет рассудок на 1 раунд и совершает случайную базовую атаку по своему ближайшему союзнику."
+      }
+    },
+    "protean": {
+      "name": "Превращение",
+      "levels": {
+        "1": "Активный [1 ПК]: Бонусное действие — отрастить когти до конца боя. Атаки в упор наносят 1d6 + Сила аггравированного урона (после попадания цель не может лечиться 1 ход).",
+        "2": "Пассивный: +1 к Скорости (максимум 3). Все проверки Восприятия (Выживание/Внимательность) идут с преимуществом. Падение с высоты до 10 метров не наносит урона.",
+        "3": "Усиление активного [2 ПК]: Вместо когтей — превращение в боевую форму Зверя. Укус наносит 2d6 + Сила, КД увеличивается на +2. Физический урон по вам решительно режется до 1/4."
+      }
+    },
+    "thaumaturgy": {
+      "name": "Тауматургия",
+      "levels": {
+        "1": "Активный [1 ПК]: Действие — выстрел кипящей кровью на дист. 2-3. Атака через Интеллект. Урон — 1d8 + 2×ИНТ аггравированного (это не огонь: двойной урон не действует).",
+        "2": "Пассивный: Вы пассивно видите точные ХП всех существ вокруг. Все ваши проверки Интеллекта (Оккультизм/Медицина) совершаются с преимуществом.",
+        "3": "Усиление активного [2 ПК]: Выстрел бьет по площади. Взрыв наносит 3d6 + 2×ИНТ аггравированного урона основной цели и по 1d6 урона всем, кто стоит на той же дистанции рядом с ней."
+      }
+    },
+    "obtenebration": {
+      "name": "Власть над Тенью",
+      "levels": {
+        "1": "Активный [1 ПК]: Действие — призвать теневое щупальце на дист. 2. Урон 1d10 + Харизма. При попадании цель становится Схваченной (скорость 0). Живет 3 раунда.",
+        "2": "Пассивный: Зрение Бездны. Вы идеально видите в любой мистической темноте. Проверки на Скрытность в темноте и спасброски против чужой магии идут с преимуществом.",
+        "3": "Усиление активного [1 ПК]: Удержанная щупальцем цель каждую атаку удушается Бездной, получая 1d4 аггравированного урона в начале каждого своего хода до освобождения."
+      }
+    },
+    "vicissitude": {
+      "name": "Изменчивость",
+      "levels": {
+        "1": "Активный [1 ПК]: Бонусное действие — ты перестраиваешь свои кости и хрящи. Ты отращиваешь под кожей костяные пластины, которые пассивно дают тебе +2 к КД до конца боя.",
+        "2": "Пассивный: Мастер плоти. Твое тело способно пережить любые деформации. Ты получаешь иммунитет к критическим ударам (они наносят тебе обычный урон). Все твои проверки Выносливости и проверки на сопротивление физическим травмам/переломам идут с преимуществом.",
+        "3": "Усиление активного [2 ПК]: Атака «Лепка плоти» в упор (дистанция 1). Ты касаешься лица врага и сращиваешь его кожу. Цель делает спасбросок Ловкости. При провале получает 2d10 урона и Оглушена на 1 ход."
+      }
+    }
+  }
+};
+
+const DISCIPLINES = LORE.disciplines;
+
+// Клановые способности. Показываются на шаге 1, в листе и в «Правилах».
+const CLAN_ABILITIES = {
+  brujah:    { name: "Праведный гнев", cost: "1 ПК",
+    text: "Бонусное действие: до конца боя +2 к урону в ближнем бою, но Сложность Ярости (Бешенство) становится 14." },
+  gangrel:   { name: "Дитя ночи", cost: "бесплатно",
+    text: "Говорит с животными (навык Обращение с животными — от клана) и видит в полной темноте." },
+  malkavian: { name: "Озарение", cost: "раз за сессию",
+    text: "Задать Мастеру один вопрос о происходящем в сцене. Ответ приходит загадкой или видением." },
+  nosferatu: { name: "Сеть слухов", cost: "раз за сессию",
+    text: "Узнать один секрет одного NPC. Восстановить способность: уйти в канализацию собирать слухи, потратив на это целую ночь." },
+  toreador:  { name: "Муза", cost: "раз за ночь",
+    text: "Один бросок в разговоре (Убеждение, Обман, Исполнение, Этикет…) — с преимуществом." },
+  tremere:   { name: "Кровь Пирамиды", cost: "раз за ночь",
+    text: "Пассивно чувствует магию рядом. Жертва: раз за ночь нанести себе 1d6 урона и восстановить 1 ПК." },
+  ventrue:   { name: "Право повелевать", cost: "раз за сессию, без ПК",
+    text: "Бесплатный приказ: слабый (одно слово) — Сородичу, сильный (фраза) — человеку. Цель делает спасбросок Восприятия против 8 + ХАР." },
+  lasombra:  { name: "Тёмная пелена", cost: "1 ПК",
+    text: "Бонусное действие — окутывает себя тьмой Бездны: не получает урона от солнца 1 ход в бою или 1 минуту вне боя. Огонь по-прежнему наносит ×3." },
+  tzimisce:  { name: "Лепка себя", cost: "1d4 часа",
+    text: "Меняет собственную внешность (лицо, рост, голос) — работа занимает 1d4 часов." },
+};
+
+// Навыки. Проверка навыка = d20 + мод. характеристики + бонус навыка.
+// Клан даёт 1 навык на +2; игрок выбирает ещё 2: один на +2, другой на +1.
+// requires — навык доступен только с этой дисциплиной (или если он клановый).
+const SKILLS = [
+  { id: "athletics",   name: "Атлетика",          ability: "str" },
+  { id: "acrobatics",  name: "Акробатика",        ability: "dex" },
+  { id: "stealth",     name: "Скрытность",        ability: "dex" },
+  { id: "sleight",     name: "Ловкость рук",      ability: "dex" },
+  { id: "occult",      name: "Оккультизм",        ability: "int" },
+  { id: "medicine",    name: "Медицина",          ability: "int" },
+  { id: "tech",        name: "Технологии",        ability: "int" },
+  { id: "lore",        name: "Начитанность",      ability: "int" },
+  { id: "crafts",      name: "Ремесло",           ability: "int" },
+  { id: "perception",  name: "Внимательность",    ability: "wis" },
+  { id: "insight",     name: "Проницательность",  ability: "wis" },
+  { id: "survival",    name: "Выживание",         ability: "wis" },
+  { id: "animals",     name: "Обращение с животными", ability: "wis", requires: "animalism" },
+  { id: "persuasion",  name: "Убеждение",         ability: "cha" },
+  { id: "deception",   name: "Обман",             ability: "cha" },
+  { id: "intimidation",name: "Запугивание",       ability: "cha" },
+  { id: "performance", name: "Исполнение",        ability: "cha" },
+  { id: "etiquette",   name: "Этикет",            ability: "cha" },
+  { id: "leadership",  name: "Лидерство",         ability: "cha" },
+  { id: "streetwise",  name: "Знание улиц",       ability: "cha" },
+];
+const CLAN_SKILLS = {
+  brujah: "athletics", gangrel: "animals", malkavian: "insight", nosferatu: "stealth", toreador: "performance",
+  tremere: "occult", ventrue: "leadership", lasombra: "intimidation", tzimisce: "medicine",
+};
+const SKILL_PICKS = [{ key: "two", bonus: 2 }, { key: "one", bonus: 1 }];
+
+// Броня. Без брони КД = 10 + ЛОВ; в любой броне Ловкость к КД не добавляется: КД = 10 + бонус брони.
+// Чем крепче броня, тем больше штраф. Броня выгоднее всего персонажам с низкой Ловкостью.
+const ARMOR = [
+  { id: "light",  name: "Лёгкий бронежилет",   ac: 2, note: "" },
+  { id: "kevlar", name: "Кевларовый жилет",     ac: 3, init: -1, note: "−1 к Инициативе." },
+  { id: "heavy",  name: "Тяжёлый бронежилет",   ac: 4, dexDisadvantage: true, noDash: true,
+    note: "Помеха на проверки Ловкости и Инициативу, нельзя делать Рывок." },
+];
+
+// Зверь: единая механика Бешенства. Спасбросок Восприятия; Человечность 9–10 — преимущество, 0–3 — помеха.
+const BEAST = [
+  { id: "hunger", name: "Голод",      trigger: "ПК = 0 (каждый ход, пока ПК = 0)", dc: 10,
+    fail: "Бежит к ближайшему живому и кусает.", clan: { gangrel: "срывается автоматически, без спасброска" } },
+  { id: "rage",   name: "Ярость",     trigger: "Провокация, унижение", dc: 12,
+    fail: "Атакует обидчика или ближайшего.",
+    clan: { brujah: "спасбросок с помехой; боль (новый уровень ранений, пропущенный крит) — всегда проверка",
+            gangrel: "боль (новый уровень ранений, пропущенный крит) — всегда проверка" } },
+  { id: "fear",   name: "Страх огня", trigger: "Огонь или солнце рядом", dc: 12,
+    fail: "Бежит от огня, бросив всё." },
+];
+const BEAST_FAIL = "Провал — 1 ход под управлением Мастера.";
+
+// Узы Крови: 1 глоток крови вампира = +1 ступень к нему (не больше 1 за ночь).
+const BLOOD_BOND = [
+  { level: 1, name: "Симпатия",       text: "Помеха, если пытаешься обмануть этого вампира." },
+  { level: 2, name: "Привязанность",  text: "Помеха против его ментальных Дисциплин. Чтобы напасть на него — спасбросок ВОС (Сложность 12)." },
+  { level: 3, name: "Узы",            text: "Его приказ — спасбросок ВОС (Сложность 15), чтобы ослушаться. Тремер достигают 3-й ступени уже со 2-го глотка." },
+];
+
+// Короткие тексты уровней для листа персонажа — только игровая механика.
+// Полные тексты — в LORE (раздел «Правила»). Подстановки считаются под персонажа:
+//   {dc:cha} → Сложность 8 + мод. ХАР;  {5+con} → 5 + мод. ВЫН.
+const DISCIPLINE_SHORT = {
+  celerity: {
+    1: "Бонусное — «Рывок»: +1 к Скорости до конца хода и преимущество на первую атаку в этот ход.",
+    2: "+3 к Инициативе, +1 к КД (учтено). Броски ЛОВ и Инициативы с преимуществом.",
+    3: "«Рывок» даёт Скорость 3 до конца хода (дистанции не важны) и дополнительную атаку в этот ход.",
+  },
+  fortitude: {
+    1: "Бонусное — Щит Брони: {5+con} врем. HP. Огонь/УФ игнорируют щит.",
+    2: "+5 к макс. HP (учтено), иммунитет к Оглушению. Проверки ВЫН с преимуществом.",
+    3: "Щит Брони даёт {10+con} врем. HP; пока он активен — штрафы ранений не действуют.",
+  },
+  potence: {
+    1: "Следующая успешная атака в упор — максимальный урон по кубам.",
+    2: "Кулак 1d8 + СИЛ (учтено). Проверки СИЛ с преимуществом.",
+    3: "Удар: максимум урона + 2d6 дробящего; цель отлетает на 1 дист. и падает.",
+  },
+  animalism: {
+    1: "Бонусное — рой крыс на дист. 2–3 на 1 раунд: враги в зоне атакуют с помехой и получают 1d4 в начале хода.",
+    2: "Звери не нападают первыми; 1 ПК — вселиться в крупное животное. ВОС и поиск засад с преимуществом.",
+    3: "Рой наносит 2d4 за раунд и отгоняет цель на 1 дист. (бегство в панике).",
+  },
+  auspex: {
+    1: "Действие — читать поверхностные мысли на дист. 2–3; видеть невидимых.",
+    2: "Видите ловушки, тайные двери, магию. ИНТ, Оккультизм, Внимательность с преимуществом.",
+    3: "Ментальное сканирование: первая атака по цели с преимуществом, крит по ней на 18–20 до конца боя.",
+  },
+  obfuscate: {
+    1: "Невидимость до конца следующего хода; спадает при атаке или другой Дисциплине.",
+    2: "Люди и камеры не замечают вас, пока вы не агрессивны. Скрытность с преимуществом.",
+    3: "Идеальная невидимость до сброса; спадает при атаке или активной Дисциплине. Первый удар из засады — с преимуществом и ×2 урона. Повтор — 2 ПК.",
+  },
+  dominate: {
+    1: "Действие — приказ из 1 слова, дист. 1–2, зрительный контакт. Спасбросок ВОС (Сл. {dc:cha}) или цель пропускает ход. Не на оборотней и сильных Сородичей.",
+    2: "Защита от внушения. Обман/Запугивание тет-а-тет и спасброски против ментальных атак с преимуществом.",
+    3: "Приказ-фраза («Атакуй напарника», «Брось оружие») — цель подчиняется даже во вред себе.",
+  },
+  presence: {
+    1: "Действие — «Взгляд Ужаса»: враги на дист. 1–2, спасбросок ВОС (Сл. {dc:cha}). Провал — не подходят на дист. 1 и атакуют вас с помехой, 1 раунд.",
+    2: "Убеждение/Исполнение с толпой с преимуществом. Враги бросают Инициативу против вас с помехой.",
+    3: "Абсолютное Величие: провалившие спасбросок падают на колени и не атакуют вас 1 минуту (или до урона).",
+  },
+  dementation: {
+    1: "Действие — шёпот безумной мысли, дист. 1–2 (цель должна слышать). Спасбросок ВОС (Сл. {dc:cha}) или цель пропускает ход. Не на Сородичей с большей Силой Крови.",
+    2: "Прорицание по вам выдаёт бред; Проницательность против вас с помехой.",
+    3: "Провал спасброска ВОС — цель 1 раунд без рассудка и атакует ближайшего союзника.",
+  },
+  protean: {
+    1: "Бонусное — когти до конца боя: 1d6 + СИЛ аггр., в упор. После попадания цель не лечится 1 ход.",
+    2: "+1 к Скорости (учтено). Выживание/Внимательность с преимуществом. Падение до 10 м без урона.",
+    3: "Боевая форма Зверя: укус 2d6 + СИЛ, +2 к КД, физический урон по вам ×¼.",
+  },
+  thaumaturgy: {
+    1: "Действие — кипящая кровь, дист. 2–3, атака через ИНТ, 1d8 + 2×ИНТ аггр. (не огонь, без ×2).",
+    2: "Видите точные HP существ. Оккультизм/Медицина (ИНТ) с преимуществом.",
+    3: "Выстрел по площади: 3d6 + 2×ИНТ аггр. цели и по 1d6 всем рядом с ней на той же дистанции.",
+  },
+  obtenebration: {
+    1: "Действие — теневое щупальце на дист. 2: 1d10 + ХАР, цель Схвачена (скорость 0), живёт 3 раунда.",
+    2: "Видите в мистической тьме. Скрытность в темноте и спасброски против магии с преимуществом.",
+    3: "Схваченная цель получает 1d4 аггр. в начале каждого своего хода.",
+  },
+  vicissitude: {
+    1: "Бонусное — костяные пластины: +2 к КД до конца боя.",
+    2: "Иммунитет к критам. Проверки ВЫН и сопротивление травмам с преимуществом.",
+    3: "«Лепка плоти» в упор: спасбросок ЛОВ (Сл. {12+dex}); провал — 2d10 урона и Оглушение на 1 ход.",
+  },
+};
+const CLANS = Object.entries(LORE.clans).map(([id, c]) => ({ id, ...c }));
+
+// Дистанция — абстрактные уровни.
+const DISTANCES = { 1: "В упор", 2: "Ближняя", 3: "Дальняя" };
+
+// Проверка скрытого ношения: Ловкость (Скрытность) против Пассивного Восприятия.
+const STEALTH_DC = 10;
+
+// Стартовое оружие (игрок выбирает ровно одно).
+// die — кость урона; ability — характеристика урона (addMod: false — без мода к урону);
+// kind — "melee" (попадание d20 + мастерство) или "ranged" (попадание d20 + ЛОВ + мастерство);
+// mastery — мастерство, которое даёт выбор этого оружия;
+// distance — допустимые дистанции; concealable — нужна ли проверка скрытного ношения;
+// upgrades — замена кости урона, если у персонажа есть дисциплина.
+const WEAPONS = [
+  {
+    id: "none", name: "Без оружия", die: "1d4", ability: "str", kind: "melee", mastery: "melee", type: "Дробящий", distance: [1],
+    concealable: false, stealth: "Автоматически скрыто (нет оружия)",
+    description: "Вы полагаетесь на свои кулаки или вампирские когти. Никаких проблем с полицией и Маскарадом.",
+    upgrades: [{ discipline: "potence", level: 2, die: "1d8" }],
+  },
+  {
+    id: "pistol_9mm", name: "Пистолет (9мм)", die: "1d6", ability: "dex", addMod: false, kind: "ranged", mastery: "firearms", type: "Колющий (физ.)", distance: [2, 3],
+    concealable: true, stealth: `Проверка Ловкости (Скрытность) против Восприятия (Сложность ${STEALTH_DC})`,
+    description: "Легко спрятать под курткой. Эффективен на расстоянии, но бесполезен в плотном клинче (Дистанция 1).",
+  },
+  {
+    id: "short_blade", name: "Короткий клинок (Нож / Заточка)", die: "1d6", ability: "str", kind: "melee", mastery: "melee", type: "Режущий (физ.)", distance: [1],
+    concealable: true, stealth: `Проверка Ловкости (Скрытность) против Восприятия (Сложность ${STEALTH_DC})`,
+    description: "Компактное холодное оружие. Идеально для бесшумных убийств со спины в упор (Дистанция 1).",
+  },
+];
+
+const UNARMED_ID = "none";
+
+// Мастерство владения — выдаётся выбором стартового оружия, добавляется к ПОПАДАНИЮ.
+const MASTERY = {
+  firearms: { name: "Огнестрельное оружие", bonus: 1 },
+  melee:    { name: "Ближний бой",          bonus: 2 },
+};
+
+// Атаки, которые дают дисциплины (попадают в лист, если изучен уровень level).
+// kind — "melee" (d20 + мастерство ближнего боя); attack — характеристика попадания для магических атак;
+// ability — характеристика урона; addMod — прибавлять ли её к урону;
+// save — атака через спасбросок цели (характеристика спасброска); dc — { base, ability } Сложности;
+// modMul — множитель модификатора к урону (Тауматургия: 2×ИНТ);
+// aggr — аггравированная атака: характеристика атакующего для Сложности тяжёлого ранения (8 + мод.).
+const DISCIPLINE_ATTACKS = [
+  { discipline: "protean",       level: 1, name: "Когти (Превращение)", die: "1d6",  ability: "str", addMod: true, kind: "melee", aggr: "str",
+    type: "Аггравированный", distance: [1], note: "1 ПК, бонусное действие, до конца боя. После попадания цель не лечится 1 ход." },
+  { discipline: "protean",       level: 3, name: "Укус Зверя (Превращение)", die: "2d6", ability: "str", addMod: true, kind: "melee",
+    type: "—", distance: [1], note: "2 ПК, боевая форма: +2 КД, физ. урон по вам ×¼." },
+  { discipline: "thaumaturgy",   level: 1, name: "Кипящая кровь (Тауматургия)", die: "1d8", attack: "int", ability: "int", addMod: true, modMul: 2,
+    aggr: "int", type: "Аггравированный", distance: [2, 3], note: "1 ПК, действие." },
+  { discipline: "thaumaturgy",   level: 3, name: "Взрыв крови (Тауматургия)", die: "3d6", attack: "int", ability: "int", addMod: true, modMul: 2,
+    aggr: "int", type: "Аггравированный, по площади", distance: [2, 3], note: "2 ПК. Всем рядом с целью на той же дистанции — 1d6." },
+  { discipline: "obtenebration", level: 1, name: "Теневое щупальце (Власть над Тенью)", die: "1d10", attack: "dex", ability: "cha", addMod: true,
+    type: "—", distance: [2], note: "1 ПК, действие. Цель Схвачена (скорость 0). Живёт 3 раунда." },
+  { discipline: "vicissitude",   level: 3, name: "Лепка плоти (Изменчивость)", die: "2d10", ability: "dex", addMod: false,
+    save: "dex", dc: { base: 12, ability: "dex" }, type: "—", distance: [1], note: "2 ПК. При провале спасброска цель Оглушена на 1 ход." },
+];
+
+// Сложность спасбросков против Дисциплин: 8 + мод. (ментальные — Харизма, Тауматургия — Интеллект)
+const SAVE_DC = [
+  { id: "mental", label: "ментальных Дисциплин", ability: "cha", disciplines: ["dominate", "presence", "dementation"] },
+  { id: "thaum",  label: "Тауматургии",          ability: "int", disciplines: ["thaumaturgy"] },
+];
+
+// Пассивные бонусы дисциплин к параметрам листа (действуют, если изучен уровень level).
+const DISCIPLINE_PASSIVES = [
+  { discipline: "fortitude", level: 2, hp: 5 },
+  { discipline: "celerity",  level: 2, ac: 1, init: 3 },
+];
+DISCIPLINE_PASSIVES.push({ discipline: "protean", level: 2, speed: 1 });
+
+// Скорость 1–3 и дистанции 1–3: чего стоит сблизиться с целью на дистанции 2 и 3
+const SPEED_RULES = {
+  1: { 2: "бонусное действие", 3: "весь ход (пропуск атаки)" },
+  2: { 2: "бесплатно", 3: "бонусное действие" },
+  3: { 2: "бесплатно", 3: "бесплатно" },
+};
+const speedText = sp => sp >= 3 ? "дистанции не важны" : `дист. 2 — ${SPEED_RULES[sp][2]}; дист. 3 — ${SPEED_RULES[sp][3]}`;
+
+// Типы урона
+const DAMAGE_TYPES = [
+  { id: "blunt", name: "Дробящий урон смертных", examples: "Кулаки, биты, падения — от людей",
+    rule: "Сопротивление плоти: вампиры получают от него в два раза меньше урона. Кулаки вампира наносят полный урон." },
+  { id: "normal", name: "Обычный урон", examples: "Пули, ножи, холодное оружие, кулаки вампира",
+    rule: "Вампиры получают его в полном объёме." },
+  { id: "aggravated", name: "Аггравированный урон", examples: "Огонь, УФ, солнце, когти (Превращение, оборотни)",
+    rule: "Весь урон лечится, но после аггравированного урона нельзя лечиться 1 ход. Настоящие огонь и солнце наносят вампирам ДВОЙНОЙ урон (Ласомбра — тройной, всего ×3). " +
+          "Аггравированный урон Дисциплин (когти, Тауматургия) — без множителя. " +
+          "Только аггравированный урон даёт тяжёлые ранения (3-й и 4-й уровни) — см. «Степень тяжёлого ранения»." },
+];
+const NON_AGGRAVATED_LIMIT = "От неаггравированного урона (дробящего и обычного) можно упасть максимум на 2-й уровень ранений или в Торпор (если HP упадёт до нуля).";
+
+// Степень тяжёлого ранения
+const SEVERE_WOUND = "При попадании аггравированным уроном цель проходит спасбросок Выносливости против Сложности " +
+  "8 + мод. характеристики, через которую шла атака (когти — Сила, Тауматургия — Интеллект). " +
+  "Провал — +1 степень тяжёлого ранения (3-й уровень, затем 4-й).";
+const SUN_RULE = "Прямой солнечный свет: 1d10 аггравированного урона за ход, вампиры получают его ×2 (≈11 за ход), Ласомбра ×3. " +
+  "Под прямым солнцем неофит продержится 1–2 хода.";
+const severeDC = a => a.aggr ? CONFIG.saveDCBase + mod(a.aggr) : null;
+
+// Лечение кровью: 1 ПК → 1d4 + мод. ИНТ HP, бонусным действием, один раз за бой
+const HEALING = { cost: "1 ПК", die: "1d4", ability: "int" };
+const healAmount = () => { const m = mod(HEALING.ability); return m ? `${HEALING.die} ${m > 0 ? "+" : "−"} ${Math.abs(m)}` : HEALING.die; };
+const healText = () => `восстановить 1d4 + мод. Интеллекта HP (бонусное действие, один раз за бой, не во время питья)`;
+
+// Питание и захват
+const FEEDING = [
+  { name: "Захват", text: "Проверка Силы + Атлетика против Силы + Атлетики цели. «Схвачена» от Теневого щупальца тоже считается захватом." },
+  { name: "Попытка укуса", text: "Проверка Силы + Атлетика (как захват). Успех — укус: 1d4 урона и +1 ПК." },
+  { name: "Питьё", text: "Каждый следующий ход, пока цель укушена: 1d4 урона и +1 ПК. Жертва не сопротивляется. Пока вампир пьёт, он больше НИЧЕГО не может делать (ни действий, ни бонусных, ни лечения)." },
+  { name: "Эйфория", text: "Сразу после завершения питья: +1 ко всем броскам на 1 ход. Лечиться (бонусным действием) можно только после завершения питья." },
+  { name: "Смертные", text: "HP = 10 + мод. Выносливости. Из человека можно выпить максимум 3 ПК — после этого он умирает." },
+  { name: "Вампиры", text: "Пить из вампира можно: за всё питьё — одна ступень Уз к нему. Выпитый полностью вампир впадает в Торпор (если это вообще удастся). Поглощение души — это Диаблери." },
+  { name: "Голодное Безумие", text: "Пока ПК = 0 — в начале каждого хода Бешенство от Голода (см. «Зверь»)." },
+  { name: "Охота", text: "Вне боя успешная Охота полностью восполняет ПК до 5. Каждая сессия начинается с 5 ПК." },
+];
+
+// Стадии ранений. range(maxHP) → [от, до] для стадий, зависящих от HP;
+// у стадий 3 и 4 диапазона нет — они наступают от аггравированного урона.
+const WOUND_STAGES = [
+  { level: 0, icon: "🟢", name: "Здоров", trigger: "Выше 50% HP",
+    range: max => [Math.ceil(max / 2), max],
+    effects: ["Штрафов нет."] },
+  { level: 1, icon: "🩸", name: "Тело изрешечено", trigger: "Меньше 50% HP (от любого урона)",
+    range: max => [5, Math.ceil(max / 2) - 1],
+    effects: ["Штраф −1 ко всем броскам атак и проверок характеристик.", "Нельзя делать Рывок."],
+    short: "Штраф −1 ко всем броскам. Нельзя делать Рывок. (От любого урона.)" },
+  { level: 2, icon: "🩸", name: "Едва держится на ногах", trigger: "Меньше 5 HP (от любого урона)",
+    range: () => [1, 4],
+    effects: ["Штраф −2 и ПОМЕХА на все броски (два d20, берётся худший).", "Бонусные действия недоступны."],
+    short: "Штраф −2 и ПОМЕХА на все броски. Бонусные действия недоступны. (От любого урона.)" },
+  { level: 3, icon: "🔥", name: "Тяжёлое обгорание", trigger: "1-я степень тяжёлого ранения: провал спасброска Выносливости от аггравированного урона",
+    aggravated: true,
+    effects: [`Кровь закипает: вампир вообще НЕ МОЖЕТ лечиться (тратить ${HEALING.cost} на восстановление HP запрещено).`],
+    cheatName: "Обгорание", short: "Запрещено лечиться за ПК. (Провал спасброска ВЫН от аггр. урона.)" },
+  { level: 4, icon: "🔥", name: "Духовный паралич", trigger: "2-я степень тяжёлого ранения: повторный провал спасброска Выносливости от аггравированного урона",
+    aggravated: true,
+    effects: ["Связь с мистической кровью оборвана: НЕЛЬЗЯ использовать Дисциплины и Силу Крови.",
+              "Доступны только обычные человеческие действия со всеми штрафами 2-го уровня."],
+    cheatName: "Паралич крови", short: "Блокируются все Дисциплины и Сила Крови. (Повторный провал спасброска ВЫН.)" },
+  { level: 5, icon: "💀", name: "Торпор / Окончательная смерть", trigger: "0 HP",
+    range: () => [0, 0],
+    effects: ["От обычного урона — Торпор (мистическая кома): можно спасти, напоив кровью.",
+              "От когтей — растерзан на части, но ещё можно воскресить.",
+              "От огня и солнца — Окончательная Смерть: вампир осыпается пеплом."],
+    cheatName: "0 HP", short: "Обычный урон — Торпор (кома). Когти — растерзан, можно воскресить. Огонь/солнце — Окончательная Смерть (пепел)." },
+];
+
+// Поколение и Сила Крови. gen — диапазон Поколений, potency — предел Силы Крови, maxBP — макс. запас ПК.
+const GENERATIONS = [
+  { gen: "13–12", status: "Неофиты",              potency: "1",            maxBP: "5",  bonus: "+1 к выбранному физ. моду за 1 ПК." },
+  { gen: "11–10", status: "Анциллы",              potency: "2",            maxBP: "7",  bonus: "+2 к выбранному физ. моду за 1 ПК." },
+  { gen: "9–8",   status: "Старейшины",           potency: "3",            maxBP: "10", bonus: "+3 к выбранному физ. моду за 1 ПК." },
+  { gen: "7–6",   status: "Магистры / Принцы",    potency: "4",            maxBP: "15", bonus: "+4 к выбранному физ. моду за 1 ПК. Открывает Дисциплины 4-го уровня." },
+  { gen: "5–4",   status: "Мафусаилы (Полубоги)", potency: "5",            maxBP: "20", bonus: "+5 к выбранному физ. моду за 1 ПК. Открывает Дисциплины 5-го уровня." },
+  { gen: "3",     status: "Патриархи (Пропали)",  potency: "Недостижимо", maxBP: "—",  bonus: "Абсолютная власть над плотью и разумом. Полноценные боги." },
+];
+
+// Способность «Интенсификация Крови» — есть у каждого вампира.
+const BLOOD_SURGE = {
+  name: "Интенсификация Крови",
+  cost: "1 ПК",
+  action: "Бонусное действие, раз в ход",
+  duration: "До конца боевой сцены (или 10 минут вне боя)",
+  abilities: ["str", "dex", "con"],      // какие модификаторы можно усилить
+  effect: "Выбранный модификатор (Сила, Ловкость или Выносливость) увеличивается на величину, равную текущей Силе Крови.",
+  note: "Не увеличивает макс. HP!",
+};
+
+/* =========================================================
+   РАЗДЕЛЫ ПРАВИЛ (режим «Правила», только чтение)
+   Порядок в массиве = порядок в оглавлении.
+   html  — готовый текст раздела;
+   build — раздел собирается из данных выше (кланы, дисциплины и т.д.).
+   ========================================================= */
+const RULES_SECTIONS = [
+  {
+    id: "basics",
+    title: "Основы",
+    html: `
+      <p>Упрощённая система D&amp;D 5e в сеттинге Vampire: The Masquerade.</p>
+      <h3>Характеристики</h3>
+      <p>Шесть характеристик: Сила, Ловкость, Выносливость, Интеллект, Восприятие, Харизма.
+         При создании распределяется фиксированный массив <b>15, 14, 13, 12, 10, 8</b> — каждое значение один раз.</p>
+      <p>Модификатор = (значение − 10) / 2, с округлением вниз:</p>
+      <div class="table-wrap"><table>
+        <tr><th>Значение</th><td>8</td><td>10</td><td>12</td><td>13</td><td>14</td><td>15</td></tr>
+        <tr><th>Модификатор</th><td>−1</td><td>0</td><td>+1</td><td>+1</td><td>+2</td><td>+2</td></tr>
+      </table></div>
+      <h3>Боевые параметры</h3>
+      <ul>
+        <li><b>Хиты (HP)</b> = ${CONFIG.baseHP} + 2 × мод. Выносливости</li>
+        <li><b>Класс Доспеха (КД)</b> = 10 + мод. Ловкости. Брони на старте нет; в любой броне Ловкость к КД не добавляется.</li>
+        <li><b>Пункты Крови (ПК)</b> = 5 на старте ночи у всех неофитов (от Выносливости не зависит).
+            Тратятся на Дисциплины, «Интенсификацию Крови» и лечение. Максимум ПК у игроков — 5.</li>
+        <li><b>Скорость</b> — от 1 до 3, базовая <b>${CONFIG.baseSpeed}</b>. Определяет, чего стоит сблизиться с целью:
+          <div class="table-wrap"><table>
+            <tr><th>Скорость</th><th>Цель на дист. 1</th><th>Цель на дист. 2</th><th>Цель на дист. 3</th></tr>
+            ${[1, 2, 3].map(sp => `<tr><td><b>${sp}</b></td><td>бесплатно</td><td>${SPEED_RULES[sp][2]}</td><td>${SPEED_RULES[sp][3]}</td></tr>`).join("")}
+          </table></div>
+          Превращение 2: +1 (максимум 3). На 1-м уровне ранений нельзя делать Рывок.</li>
+        <li><b>Инициатива</b> = d20 + мод. Ловкости (Стремительность 2: +3 и преимущество).</li>
+      </ul>
+      <h3>Броски</h3>
+      <ul>
+        <li><b>Попадание в ближнем бою:</b> d20 + мастерство (если есть). Урон — кость + мод. Силы.</li>
+        <li><b>Попадание в дальнем бою:</b> d20 + мод. Ловкости + мастерство. К урону Ловкость <b>не</b> добавляется.</li>
+        <li><b>Мастерство</b> даёт выбор стартового оружия: огнестрельное <b>+1</b> (пистолет) или ближний бой <b>+2</b>
+            (клинок, без оружия). Добавляется только к попаданию.</li>
+        <li><b>Сложность спасбросков против Дисциплин:</b> 8 + мод. Харизмы вампира (ментальные)
+            или 8 + мод. Интеллекта (Тауматургия).</li>
+        <li><b>Проверки:</b> 10 и выше против Сложности 10 — успех. Навык: d20 + мод. + бонус навыка.</li>
+        <li><b>Преимущество и помеха</b> не складываются и гасят друг друга.</li>
+        <li><b>Крит:</b> натуральная 20 на попадании — кости урона ×2. Крит аггравированной атакой — тяжёлое ранение
+            <b>без спасброска</b>. (Прорицание 3 расширяет крит до 18–20; Изменчивость 2 даёт иммунитет.)</li>
+        <li><b>Оглушение:</b> персонаж пропускает свой следующий ход (Стойкость Крови 2 даёт иммунитет).</li>
+      </ul>`,
+  },
+  { id: "clans",       title: "Кланы",          build: () => rulesClans() },
+  { id: "disciplines", title: "Дисциплины",     build: () => rulesDisciplines() },
+  { id: "weapons",     title: "Оружие",         build: () => rulesWeapons() },
+  { id: "wounds",      title: "Урон и ранения", build: () => rulesWounds() },
+  { id: "feeding",     title: "Питание",        build: () => rulesFeeding() },
+  { id: "beast",       title: "Зверь и Узы Крови", build: () => `
+      <h3>Зверь (Бешенство)</h3>
+      <p>Одна механика на все срывы: спасбросок <b>Восприятия</b>. Человечность 9–10 — с преимуществом, 0–3 — с помехой.
+         ${esc(BEAST_FAIL)} Преимущество и помеха гасят друг друга.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Триггер</th><th>Сложность</th><th>Кланы</th><th>При провале</th></tr>
+        ${BEAST.map(b => `<tr><td><b>${esc(b.name)}</b>: ${esc(b.trigger)}</td><td>${b.dc}</td>
+          <td>${esc(Object.entries(b.clan || {}).map(([k, v]) => `${CLANS.find(c => c.id === k)?.name}: ${v}`).join("; ") || "—")}</td>
+          <td>${esc(b.fail)}</td></tr>`).join("")}
+      </table></div>
+      <h3>Узы Крови</h3>
+      <p>Один глоток крови вампира — +1 ступень Уз к нему (не больше одной ступени за ночь).
+         Питьё из вампира (в том числе из врага в бою) даёт <b>одну ступень Уз за всё питьё</b>.
+         Выпитый полностью вампир впадает в Торпор (если это вообще удастся).
+         Ослабление и разрыв Уз — отдельная механика, будет позже.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Ступень</th><th>Эффект</th></tr>
+        ${BLOOD_BOND.map(b => `<tr><td><b>${b.level}. ${esc(b.name)}</b></td><td>${esc(b.text)}</td></tr>`).join("")}
+      </table></div>` },
+  { id: "skills",      title: "Навыки",         build: () => `
+      <p>Проверка навыка = d20 + мод. характеристики + бонус навыка. Клан даёт 1 навык на <b>+2</b>;
+         при создании игрок выбирает ещё два: один на <b>+2</b>, другой на <b>+1</b>.
+         «Обращение с животными» доступно только с Анимализмом (у Гангрела — от клана).</p>
+      <div class="table-wrap"><table>
+        <tr><th>Характеристика</th><th>Навыки</th></tr>
+        ${ABILITIES.map(a => ({ a, list: SKILLS.filter(k => k.ability === a.key) })).filter(g => g.list.length)
+          .map(g => `<tr><td><b>${esc(g.a.name)}</b></td><td>${g.list.map(k => esc(k.name)).join(", ")}</td></tr>`).join("")}
+      </table></div>
+      <h3>Навык клана</h3>
+      <p>${CLANS.map(c => `${esc(c.name)} — ${esc(skillById(CLAN_SKILLS[c.id])?.name ?? "—")}`).join(" · ")}</p>` },
+  { id: "armor",       title: "Броня",          build: () => `
+      <p>Без брони КД = 10 + мод. Ловкости. В любой броне Ловкость к КД <b>не</b> добавляется. На старте брони нет.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Броня</th><th>КД</th><th>Штрафы</th></tr>
+        ${ARMOR.map(a => `<tr><td><b>${esc(a.name)}</b></td><td>${CONFIG.baseAC + a.ac}</td><td>${esc(a.note || "нет")}</td></tr>`).join("")}
+      </table></div>` },
+  { id: "humanity",    title: "Человечность",   build: () => `
+      <p>Шкала от 0 до ${CONFIG.maxHumanity}. У всех персонажей на старте — <b>${CONFIG.startingHumanity}</b>.</p>
+      <div class="table-wrap"><table>
+        <tr><th>Человечность</th><th>Эффект</th></tr>
+        <tr><td><b>9–10</b></td><td>Проверки Бешенства с преимуществом</td></tr>
+        <tr><td><b>4–8</b></td><td>Без бонусов и штрафов</td></tr>
+        <tr><td><b>0–3</b></td><td>Проверки Бешенства с помехой</td></tr>
+      </table></div>
+      <p>Человечность также влияет на репутацию в городе и среди Сородичей.</p>` },
+  {
+    id: "generations",
+    title: "Поколение и Сила Крови",
+    build: () => rulesGenerations(),
+  },
+];
+
+/* =========================================================
+   СОСТОЯНИЕ
+   ========================================================= */
+const TOTAL_STEPS = 5;
+
+const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+// Пустой персонаж. Всё, что здесь есть, сохраняется и экспортируется.
+function blankCharacter() {
+  return {
+    id: newId(),
+    step: 1,
+    name: "",
+    concept: "",
+    clanId: null,
+    abilities: Object.fromEntries(ABILITIES.map(a => [a.key, null])),
+    disciplines: {},            // id дисциплины → изученный уровень (1–3)
+    bonusPoints: 0,             // доп. очки Дисциплин от Мастера
+    weaponId: null,
+    generation: CONFIG.generationOptions[0],
+    bloodPotency: CONFIG.startingBloodPotency,
+    humanity: CONFIG.startingHumanity,
+    avatar: null,               // data:image/jpeg;base64,… или null (пустая рамка на листе)
+    skills: { two: null, one: null },   // навыки на выбор: +2 и +1 (клановый навык — отдельно, по клану)
+    armorId: null,              // на старте брони нет — её выдаёт Мастер
+  };
+}
+
+const state = { ...blankCharacter(), currentHP: null };   // currentHP — только для подсветки стадии на экране
+
+/* =========================================================
+   УТИЛИТЫ И ПРАВИЛА
+   ========================================================= */
+const $ = sel => document.querySelector(sel);
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g,
+  c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+const modOf = score => Math.floor((score - 10) / 2);            // 15 → +2, 8 → −1
+const fmt = n => (n >= 0 ? "+" : "−") + Math.abs(n);           // красивый знак
+const mod = key => state.abilities[key] == null ? 0 : modOf(state.abilities[key]);
+
+const clan = () => CLANS.find(c => c.id === state.clanId) || null;
+const discipline = id => DISCIPLINES[id] || { name: id, levels: {} };
+
+// Уровни дисциплины: «Ур. N» + жирный префикс до первого двоеточия («Активный [1 ПК]»).
+// owned — изученный уровень: неизученные уровни приглушаются (или скрываются при onlyOwned).
+function levelsHTML(d, owned = Infinity, onlyOwned = false) {
+  return Object.entries(d.levels || {}).map(([lvl, text]) => {
+    const has = Number(lvl) <= owned;
+    if (onlyOwned && !has) return "";
+    const i = text.indexOf(":");
+    const body = i > 0 ? `<b>${esc(text.slice(0, i))}:</b>${esc(text.slice(i + 1))}` : esc(text);
+    return `<p class="lvl ${has ? "" : "not-owned"}"><span class="lvl-n">Ур. ${esc(lvl)}</span> ${body}</p>`;
+  }).join("");
+}
+
+// Изученный уровень дисциплины (0 — не изучена)
+const discLevel = id => state.disciplines[id] || 0;
+const hasDisc = (id, level = 1) => discLevel(id) >= level;
+const learnedDisciplines = () => Object.entries(state.disciplines).filter(([, l]) => l > 0);
+const pointsSpent = () => learnedDisciplines().reduce((sum, [, l]) => sum + l, 0);
+const pointsBudget = () => CONFIG.disciplinePoints + (state.bonusPoints || 0);
+const activePassives = () => DISCIPLINE_PASSIVES.filter(p => hasDisc(p.discipline, p.level));
+const dots = (n, max) => "●".repeat(n) + "○".repeat(Math.max(0, max - n));
+
+const weapon = () => WEAPONS.find(w => w.id === state.weaponId) || null;
+const armor = () => ARMOR.find(a => a.id === state.armorId) || null;
+
+// Навыки персонажа: [{ skill, bonus, total }] — клановый + два выбранных
+const clanSkillId = () => CLAN_SKILLS[state.clanId] || null;
+const skillById = id => SKILLS.find(k => k.id === id) || null;
+const skillAllowed = (sk) => !sk.requires || hasDisc(sk.requires) || clanSkillId() === sk.id;
+function skillBonus(id) {
+  return (clanSkillId() === id ? 2 : 0) + SKILL_PICKS.reduce((sum, p) => sum + (state.skills[p.key] === id ? p.bonus : 0), 0);
+}
+function characterSkills() {
+  const ids = [clanSkillId(), ...SKILL_PICKS.map(p => state.skills[p.key])].filter(Boolean);
+  return [...new Set(ids)].map(id => { const sk = skillById(id); return { skill: sk, bonus: skillBonus(id), total: mod(sk.ability) + skillBonus(id) }; });
+}
+
+function combatStats() {
+  const bonus = key => activePassives().reduce((sum, p) => sum + (p[key] || 0), 0);
+  return {
+    hp: CONFIG.baseHP + CONFIG.hpConMultiplier * mod("con") + bonus("hp"),
+    ac: CONFIG.baseAC + (armor() ? armor().ac : mod("dex")) + bonus("ac"),
+    bp: CONFIG.baseBP,
+    speed: Math.min(CONFIG.maxSpeed, Math.max(CONFIG.minSpeed, CONFIG.baseSpeed + bonus("speed"))),
+    init: mod("dex") + bonus("init") + (armor()?.init || 0),
+    // Стремительность 2 даёт преимущество, тяжёлая броня — помеху; вместе гасят друг друга
+    initAdvantage: hasDisc("celerity", 2) && !armor()?.dexDisadvantage,
+    initDisadvantage: !!armor()?.dexDisadvantage && !hasDisc("celerity", 2),
+    noDash: !!armor()?.noDash,
+    tempHP: hasDisc("fortitude") || hasDisc("vicissitude"),
+  };
+}
+
+// Подстановки в коротких текстах дисциплин: {dc:cha} → 8 + мод., {5+con} → 5 + мод.
+const fillTokens = text => text
+  .replace(/\{dc:(\w+)\}/g, (_, k) => CONFIG.saveDCBase + mod(k))
+  .replace(/\{(\d+)\+(\w+)\}/g, (_, n, k) => Number(n) + mod(k));
+
+// «Активный [1 ПК]» → «Акт, 1 ПК»; «Пассивный» → «Пасс»; «Усиление активного [2 ПК]» → «Усил, 2 ПК»
+function levelTag(fullText) {
+  const head = fullText.split(":")[0];
+  const cost = (head.match(/\[(.*?)\]/) || [])[1];
+  const kind = /^Усил/.test(head) ? "Усил" : /^Пасс/.test(head) ? "Пасс" : "Акт";
+  return cost ? `${kind}, ${cost}` : kind;
+}
+
+// Сложности спасбросков для дисциплин, которые есть у персонажа
+const saveDCs = () => SAVE_DC.filter(d => d.disciplines.some(id => hasDisc(id)))
+  .map(d => ({ ...d, value: CONFIG.saveDCBase + mod(d.ability) }));
+
+// Подпись с расшифровкой бонусов дисциплин: « +5 (Выносливость 2)»
+function passiveNote(key) {
+  return activePassives().filter(p => p[key])
+    .map(p => ` ${fmt(p[key])} (${discipline(p.discipline).name} ${p.level})`).join("");
+}
+
+const abbrOf = key => ABILITIES.find(a => a.key === key)?.abbr ?? key;
+const distText = list => list.map(d => `${d} — ${DISTANCES[d]}`).join(", ");
+
+// Кость урона с учётом дисциплин персонажа
+function weaponDie(w) {
+  const up = (w.upgrades || []).find(u => hasDisc(u.discipline, u.level));
+  return up ? up.die : w.die;
+}
+
+// Формула урона «как в правилах» (без подстановки чисел): «1d6 + ЛОВ»
+const damageFormula = w => `${weaponDie(w)}${w.addMod === false ? "" : ` + ${w.modMul ? `${w.modMul}×` : ""}${abbrOf(w.ability)}`}`;
+
+// Мастерство персонажа (из выбранного стартового оружия)
+const masteryOf = () => { const w = weapon(); return w?.mastery ? { id: w.mastery, ...MASTERY[w.mastery] } : null; };
+const masteryBonus = id => masteryOf()?.id === id ? masteryOf().bonus : 0;
+
+// Бонус попадания и его расшифровка:
+// ближний бой — d20 + мастерство; дальний — d20 + ЛОВ + мастерство (огнестрел); магия — d20 + указанная характеристика
+function attackParts(a) {
+  if (a.attack) return [[abbrOf(a.attack), mod(a.attack)]];
+  if (a.kind === "ranged") return [["ЛОВ", mod("dex")], ["мастерство", masteryBonus("firearms")]];
+  return [["мастерство", masteryBonus("melee")]];
+}
+const attackBonus = a => attackParts(a).reduce((sum, [, v]) => sum + v, 0);
+const attackNote = a => attackParts(a).filter(([, v]) => v).map(([k, v]) => `${k} ${fmt(v)}`).join(", ");
+const saveDCof = a => a.dc ? a.dc.base + mod(a.dc.ability) : null;
+
+function weaponStats(w) {
+  const m = mod(w.ability) * (w.modMul || 1);
+  const die = weaponDie(w);
+  const addMod = w.addMod !== false && m !== 0;
+  return {
+    attack: w.save ? `Спб ${abbrOf(w.save)}${w.dc ? ` (Сл. ${saveDCof(w)})` : ""}` : fmt(attackBonus(w)),
+    damage: addMod ? `${die} ${m > 0 ? "+" : "−"} ${Math.abs(m)}` : die,
+  };
+}
+
+// Затемнение 2: преимущество на Ловкость (Скрытность)
+// Скрытность: Затемнение 2 — преимущество, тяжёлая броня — помеха (вместе гасят друг друга)
+function stealthAdvNote() {
+  const adv = hasDisc("obfuscate", 2), dis = !!armor()?.dexDisadvantage;
+  if (adv && !dis) return ", с преимуществом (Затемнение 2)";
+  if (dis && !adv) return ", с помехой (тяжёлая броня)";
+  return "";
+}
+const stealthRoll = () => mod("dex") + skillBonus("stealth");
+
+// Диапазон HP стадии ранения для конкретного персонажа: «11–22», «0», «аггр.»
+function woundRange(stage, maxHP) {
+  if (!stage.range) return "аггр.";
+  const [lo, hi] = stage.range(maxHP);
+  if (lo > hi) return "—";
+  return lo === hi ? `${lo}` : `${lo}–${hi}`;
+}
+
+/* =========================================================
+   ВАЛИДАЦИЯ ШАГОВ
+   Возвращает текст ошибки или "" если всё в порядке.
+   ========================================================= */
+const validators = {
+  1() {
+    if (!state.name.trim()) return "Введите имя персонажа.";
+    if (!state.clanId) return "Выберите клан.";
+    return "";
+  },
+  2() {
+    const vals = Object.values(state.abilities);
+    if (vals.some(v => v == null)) return "Присвойте значение каждой характеристике.";
+    if (new Set(vals).size !== vals.length) return "Одно и то же значение нельзя присвоить двум характеристикам.";
+    return "";
+  },
+  3() {
+    const spent = pointsSpent();
+    if (spent !== pointsBudget())
+      return `Нужно распределить ровно ${pointsBudget()} очк. Дисциплин (распределено: ${spent}).`;
+    if (SKILL_PICKS.some(p => !state.skills[p.key])) return "Выберите оба навыка: на +2 и на +1.";
+    return "";
+  },
+  4() {
+    if (!state.weaponId) return "Выберите оружие.";
+    return "";
+  },
+  5() { return ""; },
+};
+
+/* =========================================================
+   ШАГ 1 — клан
+   ========================================================= */
+function renderClans() {
+  $("#clan-grid").innerHTML = CLANS.map(c => `
+    <label class="card ${c.id === state.clanId ? "selected" : ""}">
+      <input type="radio" name="clan" value="${c.id}" ${c.id === state.clanId ? "checked" : ""}>
+      ${esc(c.name)}<small>${esc(c.subName)}</small>
+    </label>`).join("");
+  renderClanInfo();
+}
+
+function renderClanInfo() {
+  const c = clan();
+  $("#clan-info").innerHTML = c ? `
+    <b style="font-family:var(--font-title);color:var(--blood-bright)">${esc(c.name)}</b>
+    <i>${esc(c.subName)}</i>
+    <p>${esc(c.description)}</p>
+    <div>Дисциплины клана: ${c.disciplines.map(d => `<span class="tag">${esc(DISCIPLINES[d]?.name ?? d)}</span>`).join("")}</div>
+    ${CLAN_ABILITIES[c.id] ? `<p class="bane" style="border-style:solid"><b>✦ ${esc(CLAN_ABILITIES[c.id].name)} [${esc(CLAN_ABILITIES[c.id].cost)}]:</b> ${esc(CLAN_ABILITIES[c.id].text)}</p>` : ""}
+    ${c.bane ? `<p class="bane"><b>⚠ ${esc(c.bane.name)}:</b> ${esc(c.bane.text)}</p>` : ""}
+  ` : "";
+}
+
+$("#clan-grid").addEventListener("change", e => {
+  if (e.target.name !== "clan") return;
+  if (state.clanId !== e.target.value) state.disciplines = {}; // смена клана сбрасывает дисциплины
+  state.clanId = e.target.value;
+  renderClans();
+  clearError(1);
+});
+// Текстовые поля: лимит длины + очистка от управляющих символов и лишних пробелов
+const cleanText = (v, max) => v.replace(/[\u0000-\u001f\u007f\u200b-\u200f\u2028-\u202e]/g, "")
+  .replace(/\s{2,}/g, " ").slice(0, max);
+
+function bindTextField(id, key, max) {
+  const input = $(`#${id}`);
+  const counter = $(`#${id}-count`);
+  input.maxLength = max;
+  const update = () => {
+    const v = cleanText(input.value, max);
+    if (v !== input.value) input.value = v;
+    state[key] = v.trim();
+    counter.textContent = `${input.value.length} / ${max}`;
+    counter.classList.toggle("full", input.value.length >= max);
+  };
+  input.addEventListener("input", update);
+  update();
+}
+bindTextField("char-name", "name", CONFIG.nameMaxLength);
+bindTextField("char-concept", "concept", CONFIG.conceptMaxLength);
+$("#char-generation").innerHTML = CONFIG.generationOptions.map(g => `<option value="${g}">${g}-е Поколение (Неофит)</option>`).join("");
+$("#char-generation").addEventListener("change", e => { state.generation = Number(e.target.value); });
+
+/* =========================================================
+   ШАГ 2 — характеристики
+   ========================================================= */
+function renderAbilities() {
+  $("#abilities").innerHTML = ABILITIES.map(a => `
+    <div class="ability">
+      <div class="name">${esc(a.name)}</div>
+      <div class="abbr">${esc(a.abbr)}</div>
+      <select data-ability="${a.key}"></select>
+      <div class="mod" id="mod-${a.key}"></div>
+    </div>`).join("");
+  refreshAbilitySelects();
+}
+
+// Перестраивает опции: значения, занятые другими характеристиками, блокируются.
+function refreshAbilitySelects() {
+  const used = Object.entries(state.abilities).filter(([, v]) => v != null);
+  document.querySelectorAll("#abilities select").forEach(sel => {
+    const key = sel.dataset.ability;
+    const current = state.abilities[key];
+    sel.innerHTML = `<option value="">—</option>` + CONFIG.abilityArray.map(v => {
+      const takenByOther = used.some(([k, val]) => k !== key && val === v);
+      return `<option value="${v}" ${v === current ? "selected" : ""} ${takenByOther ? "disabled" : ""}>
+        ${v}${takenByOther ? " (занято)" : ""}</option>`;
+    }).join("");
+    $(`#mod-${key}`).textContent = current == null ? "" : fmt(modOf(current));
+  });
+  renderPool();
+}
+
+function renderPool() {
+  const used = Object.values(state.abilities).filter(v => v != null);
+  const pool = [...used];
+  $("#pool").innerHTML = "Массив: " + CONFIG.abilityArray.map(v => {
+    const i = pool.indexOf(v);
+    const isUsed = i !== -1;
+    if (isUsed) pool.splice(i, 1);
+    return `<span class="chip ${isUsed ? "used" : ""}">${v}</span>`;
+  }).join("");
+}
+
+$("#abilities").addEventListener("change", e => {
+  const key = e.target.dataset.ability;
+  if (!key) return;
+  const v = e.target.value === "" ? null : Number(e.target.value);
+  // Защита на случай обхода disabled: если значение уже занято — отказываем
+  if (v != null && Object.entries(state.abilities).some(([k, val]) => k !== key && val === v)) {
+    showError(2, `Значение ${v} уже присвоено другой характеристике.`);
+    e.target.value = state.abilities[key] ?? "";
+    return;
+  }
+  state.abilities[key] = v;
+  refreshAbilitySelects();
+  clearError(2);
+});
+
+/* =========================================================
+   ШАГ 3 — дисциплины и боевые параметры
+   ========================================================= */
+function renderDisciplines() {
+  const c = clan();
+  if (!c) { $("#disc-list").innerHTML = ""; return; }
+  const left = pointsBudget() - pointsSpent();
+  $("#disc-points").innerHTML = `Очки Дисциплин: <b>${left}</b> из ${pointsBudget()} свободно
+    <span class="dots">${dots(pointsSpent(), pointsBudget())}</span>`;
+  $("#disc-list").innerHTML = c.disciplines.map(id => {
+    const d = discipline(id);
+    const cur = discLevel(id);
+    const btns = Array.from({ length: CONFIG.maxDisciplineLevel + 1 }, (_, lvl) => {
+      const tooExpensive = lvl - cur > left;
+      return `<button type="button" data-disc="${id}" data-level="${lvl}"
+        class="${lvl === cur ? "on" : ""}" ${tooExpensive ? "disabled" : ""}>${lvl === 0 ? "—" : lvl}</button>`;
+    }).join("");
+    return `
+      <div class="disc ${cur ? "selected" : ""}">
+        <div style="flex:1">
+          <div class="disc-head"><b>${esc(d.name)}</b><span class="lvl-picker" title="Уровень">${btns}</span></div>
+          ${levelsHTML(d, cur)}
+        </div>
+      </div>`;
+  }).join("");
+  renderSkills();
+  renderCombatPreview();
+}
+
+function renderSkills() {
+  // Навык, ставший недоступным (сняли Анимализм, сменили клан), сбрасывается
+  for (const p of SKILL_PICKS) {
+    const sk = skillById(state.skills[p.key]);
+    if (sk && (!skillAllowed(sk) || sk.id === clanSkillId())) state.skills[p.key] = null;
+  }
+  const clanSk = skillById(clanSkillId());
+  const groups = ABILITIES.map(a => ({ a, list: SKILLS.filter(k => k.ability === a.key) })).filter(g => g.list.length);
+  const select = p => {
+    const other = SKILL_PICKS.find(o => o.key !== p.key);
+    return `<label class="field skill-pick"><span>Навык +${p.bonus}</span>
+      <select data-skill="${p.key}"><option value="">—</option>
+        ${groups.map(g => `<optgroup label="${esc(g.a.name)}">${g.list.map(k => {
+          const off = k.id === clanSkillId() || k.id === state.skills[other.key] || !skillAllowed(k);
+          const why = !skillAllowed(k) ? " (нужен Анимализм)" : k.id === clanSkillId() ? " (уже от клана)" : "";
+          return `<option value="${k.id}" ${state.skills[p.key] === k.id ? "selected" : ""} ${off ? "disabled" : ""}>${esc(k.name)}${why}</option>`;
+        }).join("")}</optgroup>`).join("")}
+      </select></label>`;
+  };
+  $("#skills-box").innerHTML = `
+    <p class="clan-skill">От клана: <b>${clanSk ? `${esc(clanSk.name)} +2` : "—"}</b>${clanSk ? ` <span class="hint">(${esc(abbrOf(clanSk.ability))})</span>` : ""}</p>
+    <div class="skill-row">${SKILL_PICKS.map(select).join("")}</div>`;
+}
+
+$("#skills-box").addEventListener("change", e => {
+  const key = e.target.dataset.skill;
+  if (!key) return;
+  state.skills[key] = e.target.value || null;
+  renderSkills();
+  clearError(3);
+});
+
+function renderCombatPreview() {
+  const s = combatStats();
+  $("#combat-preview").innerHTML = `
+    <div class="stat"><div class="lbl">Хиты (HP)</div><div class="val">${s.hp}</div>
+      <div class="formula">${CONFIG.baseHP} ${fmt(CONFIG.hpConMultiplier * mod("con"))} (${CONFIG.hpConMultiplier} × ВЫН)${esc(passiveNote("hp"))}</div></div>
+    <div class="stat"><div class="lbl">Класс Доспеха</div><div class="val">${s.ac}</div>
+      <div class="formula">${CONFIG.baseAC} ${fmt(mod("dex"))} (ЛОВ)${esc(passiveNote("ac"))}</div></div>
+    <div class="stat"><div class="lbl">Пункты Крови</div><div class="val">${s.bp}</div>
+      <div class="formula">фиксированно у неофитов</div></div>
+    <div class="stat"><div class="lbl">Скорость</div><div class="val">${s.speed}</div>
+      <div class="formula">${esc(speedText(s.speed))}${esc(passiveNote("speed"))}</div></div>
+    <div class="stat"><div class="lbl">Инициатива</div><div class="val">${fmt(s.init)}</div>
+      <div class="formula">d20 ${fmt(mod("dex"))} (ЛОВ)${esc(passiveNote("init"))}${armor()?.init ? ` ${fmt(armor().init)} (${esc(armor().name)})` : ""}${s.initAdvantage ? ", с преимуществом" : s.initDisadvantage ? ", с помехой (тяжёлая броня)" : ""}</div></div>
+    ${saveDCs().map(d => `<div class="stat"><div class="lbl">Сложность ${esc(d.label)}</div><div class="val">${d.value}</div>
+      <div class="formula">${CONFIG.saveDCBase} ${fmt(mod(d.ability))} (${abbrOf(d.ability)})</div></div>`).join("")}`;
+}
+
+$("#disc-list").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-disc]");
+  if (!btn || btn.disabled) return;
+  const id = btn.dataset.disc;
+  const lvl = Number(btn.dataset.level);
+  if (lvl - discLevel(id) > pointsBudget() - pointsSpent()) {
+    showError(3, "Не хватает очков Дисциплин.");
+    return;
+  }
+  if (lvl === 0) delete state.disciplines[id];
+  else state.disciplines[id] = lvl;
+  renderDisciplines();
+  clearError(3);
+});
+
+/* =========================================================
+   ШАГ 4 — оружие
+   ========================================================= */
+function renderWeapons() {
+  $("#weapon-grid").innerHTML = WEAPONS.map(w => `
+    <label class="card ${w.id === state.weaponId ? "selected" : ""}">
+      <input type="radio" name="weapon" value="${w.id}" ${w.id === state.weaponId ? "checked" : ""}>
+      ${esc(w.name)}<small>${esc(damageFormula(w))} · ${esc(w.type)}</small>
+    </label>`).join("");
+  const w = weapon();
+  if (w) {
+    const ws = weaponStats(w);
+    const up = (w.upgrades || []).find(u => hasDisc(u.discipline, u.level));
+    const hasClaws = w.id === UNARMED_ID && hasDisc("protean");
+    $("#weapon-info").innerHTML = `
+      <b style="font-family:var(--font-title);color:var(--blood-bright)">${esc(w.name)}</b>
+      <p>Атака: <b>${ws.attack}</b> · Урон: <b>${esc(ws.damage)}</b> ${esc(w.type)} · Дистанция: ${esc(distText(w.distance))}</p>
+      <p>${esc(w.description)}</p>
+      ${up ? `<p>🩸 Ваше ${esc(discipline(up.discipline).name)} усиливает удар до <b>${esc(up.die)}</b>.</p>` : ""}
+      ${hasClaws ? (() => { const cl = DISCIPLINE_ATTACKS.find(x => x.discipline === "protean" && x.level === 1);
+        return `<p>🩸 ${esc(cl.name)}: ${esc(damageFormula(cl))}, ${esc(cl.type.toLowerCase())} урон (${esc(cl.note)})</p>`; })() : ""}
+      <p><i>Скрытое ношение:</i> ${esc(w.stealth)}${w.concealable ? ` — ваш бросок d20 ${fmt(stealthRoll())}${stealthAdvNote()}.` : "."}
+        <button type="button" class="rule-link" data-rule="weapons">Подробнее</button></p>`;
+  } else {
+    $("#weapon-info").innerHTML = `<span style="color:var(--text-dim);font-style:italic">Выберите оружие.</span>`;
+  }
+}
+
+$("#armor-select").innerHTML = `<option value="">Без брони (КД = 10 + ЛОВ)</option>` +
+  ARMOR.map(a => `<option value="${a.id}">${esc(a.name)}: КД ${CONFIG.baseAC + a.ac}${a.note ? ` — ${esc(a.note)}` : ", без штрафов"}</option>`).join("");
+$("#armor-select").addEventListener("change", e => { state.armorId = e.target.value || null; renderWeapons(); });
+
+$("#weapon-grid").addEventListener("change", e => {
+  if (e.target.name !== "weapon") return;
+  state.weaponId = e.target.value;
+  renderWeapons();
+  clearError(4);
+});
+
+/* =========================================================
+   ШАГ 5 — лист персонажа
+   ========================================================= */
+function renderSheet() {
+  const c = clan();
+  const w = weapon();
+  const s = combatStats();
+  const note = t => t ? `<span class="note">${esc(t)}</span>` : "";
+
+  // Блок 4: изученные дисциплины — только взятые уровни, короткие тексты, рассчитанные атаки
+  const discHTML = learnedDisciplines().map(([id, lvl]) => {
+    const d = discipline(id);
+    const levels = Array.from({ length: lvl }, (_, i) => i + 1).map(k => {
+      const short = DISCIPLINE_SHORT[id]?.[k] ?? d.levels[k] ?? "";
+      return `<p><span class="lv">Ур ${k} (${esc(levelTag(d.levels[k] || ""))}):</span> ${esc(fillTokens(short))}</p>`;
+    }).join("");
+    const attacks = DISCIPLINE_ATTACKS.filter(a => a.discipline === id && a.level <= lvl).map(a => {
+      const st = weaponStats(a);
+      const roll = a.save ? `цель: спасбросок ${abbrOf(a.save)}${a.dc ? ` (Сл. ${saveDCof(a)})` : ""}` : `попадание d20 ${st.attack}`;
+      const severe = a.aggr ? ` · аггр., тяжёлое ранение: Сл. ${severeDC(a)}` : "";
+      return `<p class="atk">⚔ ${esc(a.name.replace(/\s*\(.*\)$/, ""))}: ${roll}, урон ${esc(st.damage)} · дист. ${a.distance.join("–")}${severe}</p>`;
+    }).join("");
+    return `<div class="dsc"><div class="dsc-name">${esc(d.name)} (Уровень ${lvl})</div>${levels}${attacks}</div>`;
+  }).join("");
+
+  // Блок 5: оружие
+  let weaponHTML = "";
+  if (w) {
+    const st = weaponStats(w);
+    const up = (w.upgrades || []).find(u => hasDisc(u.discipline, u.level));
+    const dmgNote = w.addMod === false ? "без модификатора к урону" : up ? `${discipline(up.discipline).name} ${up.level}` : "";
+    const stealth = w.concealable
+      ? `Сложность обнаружения полиции/камер: <b>${STEALTH_DC}</b> (ЛОВ/Скрытность) — ваш бросок d20 ${fmt(stealthRoll())}${esc(stealthAdvNote())}`
+      : "Прятать нечего — оружия нет.";
+    weaponHTML = `
+      <section class="sh-weapon">
+        <h2>Оружие</h2>
+        <div class="wp">
+          <div><span class="lbl">Название</span><span class="big">${esc(w.name)}</span></div>
+          <div><span class="lbl">Попадание</span><span class="big">d20 ${st.attack}</span><br><span class="note">${esc(attackNote(w) || "без бонусов")}</span>
+            ${masteryOf() ? `<br><span class="note">Мастерство: ${esc(masteryOf().name)} ${fmt(masteryOf().bonus)}</span>` : ""}</div>
+          <div><span class="lbl">Урон</span><span class="big">${esc(st.damage)}</span><br><span class="note">${esc(w.type)}${dmgNote ? ` · ${esc(dmgNote)}` : ""}</span></div>
+          <div><span class="lbl">Дистанция · Скрытность</span>${esc(distText(w.distance))}<br><span class="note">${stealth}</span></div>
+        </div>
+      </section>`;
+  }
+
+  $("#sheet").innerHTML = `
+    <section class="sh-head">
+      <div><span class="lbl">Имя</span><div class="sh-name ${state.name.length > 24 ? "long" : ""}">${esc(state.name) || "Безымянный"}</div></div>
+      <div><span class="lbl">Концепт</span>${esc(state.concept) || "—"}</div>
+      <div><span class="lbl">Клан</span>${esc(c?.name ?? "—")}</div>
+      <div><span class="lbl">Поколение</span>${state.generation}-е</div>
+      <div><span class="lbl">Сила Крови</span>${state.bloodPotency}</div>
+    </section>
+
+    <div class="sh-cols">
+      <section>
+        <div class="portrait" style="${state.avatar ? `background-image:url('${state.avatar}')` : ""}">${state.avatar ? "" : `<span class="lbl">Портрет</span>`}</div>
+        <h2>Характеристики</h2>
+        <table class="ab-table"><tbody>
+          ${ABILITIES.map(a => `<tr><td class="ab-n">${esc(a.abbr)}</td>
+            <td class="ab-v">${state.abilities[a.key] ?? "—"}</td><td class="ab-m">${fmt(mod(a.key))}</td></tr>`).join("")}
+        </tbody></table>
+        <p class="surge"><b>${esc(BLOOD_SURGE.name)}</b> (бонусное действие, ${esc(BLOOD_SURGE.cost)}):
+          +${state.bloodPotency} к одному физ. моду —
+          ${BLOOD_SURGE.abilities.map(k => `${abbrOf(k)} (${fmt(mod(k))} ➔ ${fmt(mod(k) + state.bloodPotency)})`).join(" · ")}.
+          <b>${esc(BLOOD_SURGE.note)}</b></p>
+        <div class="hum">
+          <span class="lbl">Человечность</span>
+          <div class="row"><span class="v" style="font-size:15pt;font-weight:700">${state.humanity}</span>
+            <span class="sq">${"■".repeat(state.humanity)}${"□".repeat(CONFIG.maxHumanity - state.humanity)}</span></div>
+          <div class="note">${esc(humanityEffect(state.humanity))}</div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Бой</h2>
+        <div class="cb">
+          <span class="lbl">Хиты (HP), максимум</span>
+          <div class="row"><span class="v">${s.hp}</span>${note(passiveNote("hp").trim())}</div>
+          <div class="note">Текущие: <span class="blank"></span></div>
+          ${s.tempHP ? `<div class="note">Временные HP: <span class="blank"></span></div>` : ""}
+        </div>
+        <div class="cb">
+          <span class="lbl">Пункты Крови</span>
+          <div class="row"><span class="v">${s.bp} / ${s.bp}</span><span class="track">${"<i></i>".repeat(s.bp)}</span></div>
+        </div>
+        <div class="cb">
+          <span class="lbl">Класс Доспеха</span>
+          <div class="row"><span class="v">${s.ac}</span>${note([armor() ? `${armor().name} +${armor().ac}` : "", passiveNote("ac").trim()].filter(Boolean).join(" · "))}</div>
+          ${armor()?.note ? `<div class="note">${esc(armor().note)}</div>` : ""}
+        </div>
+        <div class="cb">
+          <span class="lbl">Инициатива</span>
+          <div class="row"><span class="v">${fmt(s.init)}</span>${note(s.initAdvantage ? "всегда с преимуществом" : s.initDisadvantage ? "с помехой (тяжёлая броня)" : armor()?.init ? `${fmt(armor().init)} от брони` : "")}</div>
+        </div>
+        <div class="cb">
+          <span class="lbl">Скорость</span>
+          <div class="row"><span class="v">${s.speed}</span>${note(passiveNote("speed").trim())}</div>
+          <div class="note">${esc(speedText(s.speed))}${s.noDash ? ". Рывок нельзя (тяжёлая броня)" : ""}</div>
+        </div>
+        <h2>Навыки</h2>
+        <table class="ab-table sk-table"><tbody>
+          ${characterSkills().map(k => `<tr><td>${esc(k.skill.name)} <span class="note">(${esc(abbrOf(k.skill.ability))} +${k.bonus})</span></td>
+            <td class="ab-m">${fmt(k.total)}</td></tr>`).join("") || `<tr><td>—</td></tr>`}
+        </tbody></table>
+      </section>
+
+      <section>
+        <h2>Дисциплины</h2>
+        ${discHTML || `<p class="note">—</p>`}
+        ${c && CLAN_ABILITIES[c.id] ? `<div class="dsc"><div class="dsc-name">${esc(CLAN_ABILITIES[c.id].name)} (клановая)</div>
+          <p><span class="lv">${esc(CLAN_ABILITIES[c.id].cost)}:</span> ${esc(CLAN_ABILITIES[c.id].text)}</p></div>` : ""}
+      </section>
+    </div>
+    ${weaponHTML}
+  `;
+}
+
+// Текущая стадия ранения по HP (только стадии, зависящие от HP)
+function stageForHP(hp, maxHP) {
+  if (hp == null || Number.isNaN(hp)) return null;
+  return WOUND_STAGES.find(st => st.range && (([lo, hi]) => hp >= lo && hp <= hi)(st.range(maxHP)))?.level ?? null;
+}
+
+function renderCheat() {
+  const c = clan();
+  const s = combatStats();
+  const cur = stageForHP(state.currentHP, s.hp);
+  const frenzyNote = c?.id === "gangrel" ? " Гангрел — без спасброска (см. слабость клана)." : "";
+
+  $("#cheat").innerHTML = `
+    <section class="sh-head" style="grid-template-columns: 2fr 1fr 1fr">
+      <div><span class="lbl">Шпаргалка</span><div class="sh-name">${esc(state.name) || "Безымянный"}</div></div>
+      <div><span class="lbl">Клан</span>${esc(c?.name ?? "—")}</div>
+      <div><span class="lbl">Макс. HP</span>${s.hp}</div>
+    </section>
+
+    <section>
+      <h2>Стадии ранений</h2>
+      <table>
+        <thead><tr><th></th><th>Уровень</th><th>HP</th><th>Эффект</th></tr></thead>
+        <tbody>${WOUND_STAGES.filter(w => w.level > 0).map(w => `
+          <tr class="${w.level === cur ? "current" : ""}">
+            <td><span class="box"></span></td>
+            <td style="white-space:nowrap"><b>Уровень ${w.level}</b>${w.cheatName ? ` (${esc(w.cheatName)})` : ""}</td>
+            <td style="white-space:nowrap">${woundRange(w, s.hp)}</td>
+            <td>${esc(w.short || w.effects.join(" "))}</td></tr>`).join("")}
+        </tbody>
+      </table>
+      <p style="margin:4px 0 0;font-size:9.5pt"><b>Крит</b> (натуральная 20): кости урона ×2; аггр. атакой — тяжёлое ранение без спасброска.
+        <b>Солнце:</b> 1d10 аггр. за ход, по вампиру ×2${c?.id === "lasombra" ? " (у вас ×3)" : ""}.</p>
+    </section>
+
+    ${c?.bane ? `<section>
+      <h2>Клановая слабость — ${esc(c.bane.name === "Слабость клана" ? c.name : c.bane.name)}</h2>
+      <p style="margin:0">${esc(c.bane.text)}</p>
+      ${c.id === "malkavian" ? `<div class="lines" style="margin-top:4px"><div>Моё расстройство:</div></div>` : ""}
+    </section>` : ""}
+
+    <section>
+      <h2>Зверь (Бешенство)</h2>
+      <table>
+        <thead><tr><th>Триггер</th><th>Сл.</th><th>При провале</th></tr></thead>
+        <tbody>${BEAST.map(b => `<tr><td><b>${esc(b.name)}:</b> ${esc(b.trigger)}${b.clan?.[c?.id] ? ` — <b>у вас ${esc(b.clan[c.id])}</b>` : ""}</td>
+          <td>${b.dc}${b.id === "rage" && c?.id === "brujah" ? " (14 в Праведном гневе)" : ""}</td><td>${esc(b.fail)}</td></tr>`).join("")}</tbody>
+      </table>
+      <p style="margin:4px 0 0;font-size:9.5pt">Спасбросок ВОС d20 ${fmt(mod("wis"))}. ${esc(BEAST_FAIL)}
+        Ваша Человечность ${state.humanity}: ${esc(humanityEffect(state.humanity).toLowerCase())}</p>
+    </section>
+
+    <section>
+      <h2>Питание и кровь</h2>
+      <ul>
+        ${FEEDING.map(f => `<li><b>${esc(f.name)}:</b> ${esc(f.text)}${f.name === "Голодное Безумие" ? esc(frenzyNote) : ""}${
+          f.name === "Захват" ? ` <b>Ваш бросок: d20 ${fmt(mod("str") + skillBonus("athletics"))}.</b>` : ""}</li>`).join("")}
+        <li><b>Лечение</b> <span class="box"></span> (раз за бой): ${esc(HEALING.cost)} → ${healAmount()} HP (1d4 + ИНТ), бонусное действие.
+          Нельзя во время питья, на 3-м уровне ранений и в течение 1 хода после аггр. урона.</li>
+      </ul>
+    </section>
+  `;
+}
+
+$("#cur-hp").addEventListener("input", e => {
+  state.currentHP = e.target.value === "" ? null : Math.max(0, Number(e.target.value));
+  renderCheat();
+});
+
+function printPart(part) {
+  renderSheet();
+  renderCheat();
+  document.body.classList.toggle("print-cheat", part === "cheat");
+  window.print();
+}
+$("#btn-print").addEventListener("click", () => printPart("sheet"));
+$("#btn-print-cheat").addEventListener("click", () => printPart("cheat"));
+window.addEventListener("afterprint", () => document.body.classList.remove("print-cheat"));
+
+/* ---------- Скачивание PDF без диалога печати ----------
+   Библиотека html2pdf подгружается из CDN только по нажатию кнопки.
+   Без интернета — подсказка воспользоваться печатью («Сохранить как PDF»). */
+const HTML2PDF_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+let html2pdfLoading = null;
+
+function loadHtml2pdf() {
+  if (window.html2pdf) return Promise.resolve(window.html2pdf);
+  html2pdfLoading ??= new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = HTML2PDF_URL;
+    script.onload = () => resolve(window.html2pdf);
+    script.onerror = () => { html2pdfLoading = null; script.remove(); reject(new Error("load failed")); };
+    document.head.appendChild(script);
+  });
+  return html2pdfLoading;
+}
+
+const safeName = () => state.name.replace(/[\\/:*?"<>|]+/g, "").trim() || "Персонаж";
+
+// Одновременно готовится только один PDF: параллельные запуски html2pdf портят друг другу результат
+let pdfBusy = false;
+const pdfButtons = () => [$("#btn-pdf"), $("#btn-pdf-cheat")];
+
+async function downloadPdf(btn, el, filename) {
+  if (pdfBusy) return;
+  pdfBusy = true;
+  const label = btn.textContent;
+  pdfButtons().forEach(b => { b.disabled = true; });
+  btn.textContent = "Готовлю PDF…";
+  clearError(5);
+  try {
+    const html2pdf = await loadHtml2pdf();
+    renderSheet();
+    renderCheat();
+    // Прокрутка во время генерации сбивает координаты html2canvas → пустой PDF. Блокируем её.
+    document.documentElement.classList.add("pdf-busy");
+    el.classList.add("pdf-export");
+    await html2pdf().set({
+      margin: 10,                                   // мм, как в @page
+      filename,
+      image: { type: "jpeg", quality: 0.95 },
+      html2canvas: { scale: 2, backgroundColor: "#ffffff", scrollX: 0, scrollY: 0 },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css"], avoid: ["section", "tr"] },
+    }).from(el).save();
+  } catch (err) {
+    showError(5, "Не удалось подготовить PDF (нужен интернет для загрузки генератора). " +
+      "Нажмите «Распечатать» и выберите принтер «Сохранить как PDF».");
+  } finally {
+    el.classList.remove("pdf-export");
+    document.documentElement.classList.remove("pdf-busy");
+    pdfButtons().forEach(b => { b.disabled = false; });
+    btn.textContent = label;
+    pdfBusy = false;
+  }
+}
+
+$("#btn-pdf").addEventListener("click", e =>
+  downloadPdf(e.currentTarget, $("#sheet"), `${safeName()} — лист персонажа.pdf`));
+$("#btn-pdf-cheat").addEventListener("click", e =>
+  downloadPdf(e.currentTarget, $("#cheat"), `${safeName()} — шпаргалка.pdf`));
+
+/* =========================================================
+   ЧЕЛОВЕЧНОСТЬ
+   ========================================================= */
+function humanityEffect(h) {
+  if (h >= 9) return "Проверки Бешенства — с преимуществом.";
+  if (h <= 3) return "Проверки Бешенства — с помехой.";
+  return "Без бонусов и штрафов.";
+}
+$("#char-humanity").innerHTML = Array.from({ length: CONFIG.maxHumanity + 1 }, (_, h) =>
+  `<option value="${h}">${h}${h === CONFIG.startingHumanity ? " (старт)" : ""}</option>`).join("");
+$("#char-humanity").addEventListener("change", e => { state.humanity = Number(e.target.value); });
+$("#bonus-points").max = CONFIG.maxBonusPoints;
+$("#bonus-points").addEventListener("input", e => {
+  state.bonusPoints = clampInt(e.target.value, 0, CONFIG.maxBonusPoints, 0);
+  renderDisciplines();
+});
+
+function clampInt(v, min, max, fallback) {
+  const n = Math.trunc(Number(v));
+  return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback;
+}
+
+/* =========================================================
+   ПОРТРЕТ
+   Картинка уменьшается до 480 px и хранится как JPEG (data URL).
+   ========================================================= */
+function resizeImage(file, max) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, max / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * k));
+      canvas.height = Math.max(1, Math.round(img.height * k));
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    img.src = url;
+  });
+}
+
+function renderAvatar() {
+  $("#avatar-preview").style.backgroundImage = state.avatar ? `url('${state.avatar}')` : "";
+  $("#btn-avatar-clear").hidden = !state.avatar;
+}
+
+$("#btn-avatar").addEventListener("click", () => $("#avatar-file").click());
+$("#btn-avatar-clear").addEventListener("click", () => { state.avatar = null; renderAvatar(); scheduleSave(); });
+$("#avatar-file").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (!file.type.startsWith("image/")) { showError(1, "Нужен файл-картинка (JPG, PNG…)."); return; }
+  if (file.size > 20 * 1024 * 1024) { showError(1, "Картинка слишком большая (больше 20 МБ)."); return; }
+  try {
+    state.avatar = await resizeImage(file, 480);
+    clearError(1);
+    renderAvatar();
+    scheduleSave();
+  } catch {
+    showError(1, "Не удалось прочитать картинку.");
+  }
+});
+
+/* =========================================================
+   СОХРАНЕНИЕ, ЭКСПОРТ И ИМПОРТ
+   Все персонажи хранятся в localStorage этого браузера; файл — для переноса.
+   ========================================================= */
+const STORAGE_KEY = "vtm-roster-v1";
+const FILE_FORMAT = "vtm-character";
+const AVATAR_RE = /^data:image\/(png|jpeg|webp|gif);base64,[A-Za-z0-9+/=]+$/;
+
+let storageOk = true;
+function loadRoster() {
+  try {
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (data && typeof data === "object" && data.characters && typeof data.characters === "object") return data;
+  } catch { storageOk = false; }
+  return { characters: {}, lastId: null };
+}
+let roster = loadRoster();
+
+function persistRoster() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(roster)); storageOk = true; }
+  catch { storageOk = false; }
+}
+
+function serialize() {
+  const { currentHP, ...data } = state;
+  return { format: FILE_FORMAT, version: 1, ...structuredClone(data), updatedAt: new Date().toISOString() };
+}
+
+// Данные из файла или хранилища проверяются и чистятся поле за полем
+function sanitizeCharacter(d) {
+  if (!d || typeof d !== "object" || d.format !== FILE_FORMAT) throw new Error("Это не файл персонажа.");
+  const out = blankCharacter();
+  if (typeof d.id === "string" && /^[\w-]{1,40}$/.test(d.id)) out.id = d.id;
+  out.name = cleanText(String(d.name ?? ""), CONFIG.nameMaxLength).trim();
+  out.concept = cleanText(String(d.concept ?? ""), CONFIG.conceptMaxLength).trim();
+  const c = CLANS.find(x => x.id === d.clanId);
+  out.clanId = c ? c.id : null;
+  const used = new Set();
+  for (const a of ABILITIES) {
+    const v = Number(d.abilities?.[a.key]);
+    if (CONFIG.abilityArray.includes(v) && !used.has(v)) { out.abilities[a.key] = v; used.add(v); }
+  }
+  for (const [id, lvl] of Object.entries(d.disciplines && typeof d.disciplines === "object" ? d.disciplines : {})) {
+    const l = Number(lvl);
+    if (c?.disciplines.includes(id) && Number.isInteger(l) && l >= 1 && l <= CONFIG.maxDisciplineLevel) out.disciplines[id] = l;
+  }
+  out.bonusPoints = clampInt(d.bonusPoints, 0, CONFIG.maxBonusPoints, 0);
+  out.weaponId = WEAPONS.some(w => w.id === d.weaponId) ? d.weaponId : null;
+  out.generation = CONFIG.generationOptions.includes(Number(d.generation)) ? Number(d.generation) : CONFIG.generationOptions[0];
+  out.bloodPotency = clampInt(d.bloodPotency, 1, 5, CONFIG.startingBloodPotency);
+  out.humanity = clampInt(d.humanity, 0, CONFIG.maxHumanity, CONFIG.startingHumanity);
+  out.avatar = typeof d.avatar === "string" && d.avatar.length < 4_000_000 && AVATAR_RE.test(d.avatar) ? d.avatar : null;
+  for (const pk of SKILL_PICKS) {
+    const id = d.skills?.[pk.key];
+    if (SKILLS.some(k => k.id === id) && id !== CLAN_SKILLS[out.clanId] && !Object.values(out.skills).includes(id)) out.skills[pk.key] = id;
+  }
+  out.armorId = ARMOR.some(a => a.id === d.armorId) ? d.armorId : null;
+  out.step = clampInt(d.step, 1, TOTAL_STEPS, 1);
+  return out;
+}
+
+// Автосохранение текущего персонажа (пустой черновик без имени и клана не сохраняется)
+let saveTimer = null;
+function saveCurrent() {
+  clearTimeout(saveTimer);
+  if (!state.name && !state.clanId) return;
+  roster.characters[state.id] = serialize();
+  roster.lastId = state.id;
+  persistRoster();
+}
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveCurrent, 400);
+}
+["input", "change", "click"].forEach(type =>
+  $("#mode-create").addEventListener(type, scheduleSave));
+window.addEventListener("pagehide", saveCurrent);
+
+// Перенос данных персонажа в интерфейс
+function syncInputs() {
+  $("#char-name").value = state.name;
+  $("#char-concept").value = state.concept;
+  ["char-name", "char-concept"].forEach(id => $(`#${id}`).dispatchEvent(new Event("input")));
+  $("#char-generation").value = state.generation;
+  $("#char-humanity").value = state.humanity;
+  $("#bonus-points").value = state.bonusPoints;
+  $("#armor-select").value = state.armorId || "";
+  $("#cur-hp").value = "";
+  for (let i = 1; i <= TOTAL_STEPS; i++) clearError(i);
+  renderAvatar();
+}
+
+function loadCharacter(data) {
+  Object.assign(state, data, { currentHP: null });
+  syncInputs();
+}
+
+// Первый шаг, который не проходит проверку (или null, если персонаж готов)
+function firstInvalidStep(upTo = TOTAL_STEPS - 1) {
+  for (let i = 1; i <= upTo; i++) if (validators[i]()) return i;
+  return null;
+}
+
+function openCharacter(id, where) {
+  const raw = roster.characters[id];
+  if (!raw) return;
+  saveCurrent();
+  let data;
+  try { data = sanitizeCharacter(raw); } catch { return; }
+  loadCharacter(data);
+  setMode("create");
+  goTo(where === "sheet" ? (firstInvalidStep() ?? TOTAL_STEPS) : 1);
+}
+
+function startNewCharacter() {
+  saveCurrent();
+  loadCharacter(blankCharacter());
+  setMode("create");
+  goTo(1);
+}
+
+const fileSafe = name => String(name || "").replace(/[\\/:*?"<>|\u0000-\u001f]+/g, "").trim() || "Персонаж";
+
+function exportCharacter(data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${fileSafe(data.name)}.vtm.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const fmtDate = iso => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? "" : d.toLocaleString("ru-RU", { dateStyle: "short", timeStyle: "short" }); };
+
+function renderRoster() {
+  const list = Object.values(roster.characters)
+    .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+  $("#roster-list").innerHTML = list.length ? list.map(ch => {
+    const cl = CLANS.find(x => x.id === ch.clanId);
+    const ava = typeof ch.avatar === "string" && AVATAR_RE.test(ch.avatar) ? `background-image:url('${ch.avatar}')` : "";
+    return `
+      <div class="roster-card" data-id="${esc(ch.id)}">
+        <div class="roster-ava" style="${ava}"></div>
+        <div class="roster-info"><b>${esc(ch.name) || "Безымянный"}</b>
+          <small>${esc(cl?.name ?? "клан не выбран")}${ch.updatedAt ? ` · ${esc(fmtDate(ch.updatedAt))}` : ""}</small></div>
+        <div class="roster-actions">
+          <button type="button" data-act="sheet">Лист</button>
+          <button type="button" data-act="edit">Изменить</button>
+          <button type="button" data-act="export">💾 В файл</button>
+          <button type="button" data-act="delete" class="danger">Удалить</button>
+        </div>
+      </div>`;
+  }).join("") : `<p class="hint">Пока нет сохранённых персонажей.</p>`;
+  $("#err-roster").textContent = storageOk ? "" :
+    "Браузер не даёт сохранять данные (приватный режим?). Сохраняйте персонажей в файл.";
+}
+
+$("#roster-list").addEventListener("click", e => {
+  const btn = e.target.closest("button[data-act]");
+  if (!btn) return;
+  const id = btn.closest(".roster-card").dataset.id;
+  const act = btn.dataset.act;
+  if (act === "sheet" || act === "edit") openCharacter(id, act);
+  if (act === "export") {
+    try { exportCharacter(sanitizeCharacter(roster.characters[id])); } catch { /* повреждённая запись */ }
+  }
+  if (act === "delete") {
+    if (btn.dataset.confirm !== "1") {                 // удаление в два нажатия
+      btn.dataset.confirm = "1";
+      btn.textContent = "Точно удалить?";
+      setTimeout(() => { if (btn.isConnected) { btn.dataset.confirm = ""; btn.textContent = "Удалить"; } }, 3000);
+      return;
+    }
+    delete roster.characters[id];
+    if (roster.lastId === id) roster.lastId = null;
+    persistRoster();
+    if (state.id === id) loadCharacter(blankCharacter());
+    renderRoster();
+  }
+});
+
+$("#btn-new-char").addEventListener("click", startNewCharacter);
+$("#btn-import").addEventListener("click", () => $("#import-file").click());
+$("#import-file").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    if (file.size > 6 * 1024 * 1024) throw new Error("Файл слишком большой.");
+    const data = sanitizeCharacter(JSON.parse(await file.text()));
+    if (roster.characters[data.id]) data.id = newId();   // не перезаписываем существующего — импорт создаёт копию
+    roster.characters[data.id] = { format: FILE_FORMAT, version: 1, ...data, updatedAt: new Date().toISOString() };
+    persistRoster();
+    openCharacter(data.id, "sheet");
+  } catch (err) {
+    $("#err-roster").textContent = `Не удалось загрузить: ${err instanceof SyntaxError ? "файл повреждён." : err.message}`;
+  }
+});
+$("#btn-export").addEventListener("click", () => { saveCurrent(); exportCharacter(serialize()); });
+
+/* =========================================================
+   НАВИГАЦИЯ
+   ========================================================= */
+const renderers = { 1: renderClans, 2: renderAbilities, 3: renderDisciplines, 4: renderWeapons, 5: () => { renderSheet(); renderCheat(); } };
+
+function showError(step, msg) { $(`#err-${step}`).textContent = msg; }
+function clearError(step) { $(`#err-${step}`).textContent = ""; }
+
+function goTo(step) {
+  state.step = Math.min(Math.max(step, 1), TOTAL_STEPS);
+  document.querySelectorAll(".step").forEach((el, i) => el.classList.toggle("active", i + 1 === state.step));
+  document.querySelectorAll("#steps li").forEach((li, i) => {
+    li.classList.toggle("active", i + 1 === state.step);
+    li.classList.toggle("done", i + 1 < state.step);
+  });
+  renderers[state.step]();
+  $("#btn-back").disabled = state.step === 1;
+  $("#btn-next").hidden = state.step === TOTAL_STEPS;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  scheduleSave();
+}
+
+// Клик по шагу вверху: можно перейти, если все предыдущие шаги заполнены
+$("#steps").addEventListener("click", e => {
+  const li = e.target.closest("li");
+  if (!li) return;
+  const target = [...$("#steps").children].indexOf(li) + 1;
+  const bad = firstInvalidStep(target - 1);
+  if (bad) { goTo(bad); showError(bad, validators[bad]()); return; }
+  goTo(target);
+});
+
+$("#btn-next").addEventListener("click", () => {
+  const err = validators[state.step]();
+  if (err) { showError(state.step, err); return; }
+  clearError(state.step);
+  goTo(state.step + 1);
+});
+$("#btn-back").addEventListener("click", () => goTo(state.step - 1));
+
+$("#btn-reset").addEventListener("click", startNewCharacter);
+
+/* =========================================================
+   РЕЖИМ «ПРАВИЛА»
+   ========================================================= */
+function rulesClans() {
+  return CLANS.map(c => `
+    <div class="entry">
+      <b class="title">${esc(c.name)}</b> — <i>${esc(c.subName)}</i>
+      <p>${esc(c.description)}</p>
+      <div>${c.disciplines.map(d => `<span class="tag">${esc(discipline(d).name)}</span>`).join("")}</div>
+      ${CLAN_ABILITIES[c.id] ? `<p class="bane" style="border-style:solid"><b>✦ ${esc(CLAN_ABILITIES[c.id].name)} [${esc(CLAN_ABILITIES[c.id].cost)}]:</b> ${esc(CLAN_ABILITIES[c.id].text)}</p>` : ""}
+      ${c.bane ? `<p class="bane"><b>⚠ ${esc(c.bane.name)}:</b> ${esc(c.bane.text)}</p>` : ""}
+    </div>`).join("");
+}
+
+function rulesDisciplines() {
+  return `
+    <p>Каждая дисциплина имеет 3 уровня: <b>Ур. 1</b> — активная способность, <b>Ур. 2</b> — пассивная,
+       <b>Ур. 3</b> — усиление активной. Изученный уровень включает все предыдущие.</p>
+    <h3>Выбор при создании</h3>
+    <p>У игрока <b>${CONFIG.disciplinePoints} очка Дисциплин</b> (только дисциплины своего клана). После сессий Мастер
+       выдаёт выжившим дополнительные очки. Варианты на старте:</p>
+    <ul>
+      <li>три разные дисциплины на <b>Ур. 1</b>;</li>
+      <li>одна дисциплина на <b>Ур. 2</b> (открывает мощную пассивку) и вторая на <b>Ур. 1</b>;</li>
+      <li>всего одна дисциплина, но сразу на <b>Ур. 3</b> (сверхсильный активный навык).</li>
+    </ul>
+    <h3>Все дисциплины</h3>` + Object.keys(DISCIPLINES).map(id => {
+    const d = discipline(id);
+    const clans = CLANS.filter(c => c.disciplines.includes(id)).map(c => c.name);
+    return `
+      <div class="entry">
+        <b class="title">${esc(d.name)}</b>
+        <div class="hint" style="margin:0 0 4px">Кланы: ${esc(clans.join(", ") || "—")}</div>
+        ${levelsHTML(d)}
+      </div>`;
+  }).join("");
+}
+
+function rulesWeapons() {
+  return `
+    <h3>Дистанции</h3>
+    <p>${Object.entries(DISTANCES).map(([k, v]) => `<b>${k}</b> — ${v}`).join(" · ")}</p>
+
+    <h3>Стартовый арсенал</h3>
+    <p>При создании персонажа игрок обязан выбрать один из вариантов:</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Оружие</th><th>Урон</th><th>Тип</th><th>Дистанция</th><th>Скрытое ношение</th></tr></thead>
+      <tbody>${WEAPONS.map(w => `<tr><td><b>${esc(w.name)}</b><br><small>${esc(w.description)}</small></td>
+        <td>${esc(damageFormula({ ...w, upgrades: [] }))}${w.upgrades ? `<br><small>${w.upgrades.map(u => `${u.die} + СИЛ с ${discipline(u.discipline).name} ${u.level}`).join("; ")}</small>` : ""}</td>
+        <td>${esc(w.type)}</td><td>${esc(distText(w.distance))}</td><td>${esc(w.stealth)}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p>Без оружия персонаж может полагаться и на когти, если у него есть <b>Превращение</b>
+       (1d6 + Сила, аггравированный урон, 1 ПК).</p>
+    <p>Попадание: ближний бой — d20 + мастерство; дальний — d20 + ЛОВ + мастерство (к урону ЛОВ не идёт).
+       Выбор оружия даёт мастерство: ${Object.values(MASTERY).map(m => `${esc(m.name)} ${fmt(m.bonus)}`).join(", ")}.
+       Кулаки вампира наносят полный урон; половину вампиры получают только от дробящего урона смертных.</p>
+
+    <h3>Скрытое ношение оружия</h3>
+    <p>Оружие запрещено. Каждый раз, когда персонаж проходит мимо охраны клуба, патруля полиции или камер,
+       Мастер может потребовать проверку.</p>
+    <ul>
+      <li>Стартовое оружие считается <b>Лёгким/Компактным</b>: его можно спрятать под курткой, в кармане или в складках одежды.</li>
+      <li><b>Проверка:</b> Ловкость (Скрытность) против Пассивного Восприятия наблюдателя
+          (у обычного копа или охранника — <b>${STEALTH_DC}</b>). <b>${STEALTH_DC} и выше — успех</b>, оружие не заметили;
+          меньше — охрана просит расстегнуть куртку.</li>
+    </ul>
+
+    <h3>Тяжёлое оружие</h3>
+    <p>Дробовики, автоматы, длинные мечи <b>нельзя выбрать на старте</b> — их добывают только в процессе игры.
+       Спрятать такое оружие на теле без Дисциплин (например, Затемнения или Изменчивости, чтобы спрятать клинок прямо в руке)
+       невозможно: персонаж с дробовиком на улице автоматически привлекает внимание полиции и нарушает Маскарад.</p>`;
+}
+
+function rulesWounds() {
+  return `
+    <h3>Типы урона</h3>
+    ${DAMAGE_TYPES.map(d => `<div class="entry"><b class="title">${esc(d.name)}</b>
+      <span class="hint" style="margin:0"> — ${esc(d.examples)}</span><p>${esc(d.rule)}</p></div>`).join("")}
+
+    <p>${esc(NON_AGGRAVATED_LIMIT)}</p>
+    <h3>Степень тяжёлого ранения</h3>
+    <p>${esc(SEVERE_WOUND)}</p>
+    <p><b>Крит</b> аггравированной атакой (натуральная 20) — тяжёлое ранение без спасброска.</p>
+    <h3>Солнце и огонь</h3>
+    <p>${esc(SUN_RULE)}</p>
+
+    <h3>5 уровней ранений</h3>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Уровень</th><th>Когда</th><th>Эффект</th></tr></thead>
+      <tbody>${WOUND_STAGES.map(w => `<tr>
+        <td style="white-space:nowrap">${w.icon} <b>${w.level ? `Ур. ${w.level}` : ""} ${esc(w.name)}</b></td>
+        <td>${esc(w.trigger)}</td>
+        <td>${w.effects.map(esc).join("<br>")}</td></tr>`).join("")}</tbody>
+    </table></div>
+
+    <h3>Лечение</h3>
+    <p>Вампир может потратить <b>${esc(HEALING.cost)}</b>, чтобы ${esc(healText())}.
+       Запрещено на 3-м уровне ранений и в течение 1 хода после аггравированного урона. Весь остальной урон лечится.</p>`;
+}
+
+function rulesFeeding() {
+  return `<ul>${FEEDING.map(f => `<li><b>${esc(f.name)}:</b> ${esc(f.text)}</li>`).join("")}</ul>
+    <p>Клановые ограничения на питание — см. слабость Вентру в разделе «Кланы».</p>`;
+}
+
+function rulesGenerations() {
+  return `
+    <p><b>Поколение</b> — то, насколько близко вампир стоит к Каину, первому вампиру. Оно задаёт «потолок» могущества.</p>
+    <p><b>Сила Крови</b> (Blood Potency) — текущая концентрация и мощь мистической крови внутри вампира.</p>
+    <h3>Стартовый статус</h3>
+    <p>Персонажи начинают как <b>Неофиты</b> (${CONFIG.generationOptions.join("-е или ")}-е Поколение).
+       Стартовая Сила Крови = <b>${CONFIG.startingBloodPotency}</b> («Интенсификация» даёт +1).
+       Максимум ПК у игроков — <b>${CONFIG.baseBP}</b>, независимо от Поколения.</p>
+
+    <h3>${esc(BLOOD_SURGE.name)}</h3>
+    <ul>
+      <li><b>Действие:</b> ${esc(BLOOD_SURGE.action)}</li>
+      <li><b>Стоимость:</b> ${esc(BLOOD_SURGE.cost)}</li>
+      <li><b>Эффект:</b> ${esc(BLOOD_SURGE.effect)}</li>
+      <li><b>Длительность:</b> ${esc(BLOOD_SURGE.duration)}</li>
+      <li><b>${esc(BLOOD_SURGE.note)}</b></li>
+    </ul>
+    <p><i>Пример (Сила Крови 1):</i> Виктор (Ласомбра) имеет модификатор Силы +2. В начале боя он тратит 1 ПК —
+       до конца боя его модификатор Силы +3: растут урон с руки, броски на попадание в ближнем бою и проверки Атлетики.</p>
+
+    <h3>Таблица развития</h3>
+    <p class="hint" style="margin:0 0 6px">Справка по миру: так устроены вампиры разных Поколений. На игроков лимит ПК из таблицы не действует.</p>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Поколение</th><th>Статус</th><th>Предел Силы Крови</th><th>Макс. ПК</th><th>Что даёт</th></tr></thead>
+      <tbody>${GENERATIONS.map(g => `<tr><td><b>${esc(g.gen)}</b></td><td>${esc(g.status)}</td>
+        <td>${esc(g.potency)}</td><td>${esc(g.maxBP)}</td><td>${esc(g.bonus)}</td></tr>`).join("")}</tbody>
+    </table></div>
+
+    <h3>Диаблери (Пожирание души)</h3>
+    <p>Полное поглощение души другого вампира. Это поединок: <b>поглощающий сам может быть поглощён</b> своей жертвой.</p>
+    <ul>
+      <li>Вампиры совершают встречные спасброски; кто первым победит (или чей противник быстрее проиграет) — тот поглощает.</li>
+      <li>Бонус к броску: <b>+1 за каждый уровень</b> Доминирования, Могущества и Силы Крови.</li>
+      <li>Если жертва в Торпоре — её броски с <b>помехой</b>.</li>
+      <li><b>Поколение</b> меняется только при поглощении более старшего вампира (более низкого Поколения).</li>
+      <li><b>Сила Крови</b> временно усиливается — насколько и как надолго, решает Мастер. Навсегда — например,
+          после поглощения 2–3 Сородичей своего Поколения.</li>
+    </ul>
+    <p class="hint" style="margin:0">Механика будет расширена позже.</p>`;
+}
+
+function renderRules() {
+  $("#rules-toc").innerHTML = RULES_SECTIONS.map(r => `<a href="#rule-${r.id}">${esc(r.title)}</a>`).join("");
+  $("#rules-body").innerHTML = RULES_SECTIONS.map(r => `
+    <section class="panel" id="rule-${r.id}">
+      <h2>${esc(r.title)}</h2>
+      ${r.build ? r.build() : r.html}
+    </section>`).join("");
+}
+
+function setMode(mode, sectionId) {
+  document.body.classList.toggle("mode-rules", mode === "rules");
+  for (const m of ["create", "roster", "rules"]) {
+    $(`#mode-${m}`).hidden = m !== mode;
+    $(`#mode-btn-${m}`).classList.toggle("on", m === mode);
+  }
+  if (mode === "roster") {
+    saveCurrent();
+    renderRoster();
+    window.scrollTo({ top: 0 });
+  }
+  if (mode === "rules") {
+    renderRules();
+    const target = sectionId && document.getElementById(`rule-${sectionId}`);
+    if (target) target.scrollIntoView({ behavior: "smooth" });
+    else window.scrollTo({ top: 0 });
+  }
+}
+
+$("#mode-btn-create").addEventListener("click", () => setMode("create"));
+$("#mode-btn-rules").addEventListener("click", () => setMode("rules"));
+$("#mode-btn-roster").addEventListener("click", () => setMode("roster"));
+document.addEventListener("click", e => {
+  const link = e.target.closest(".rule-link");
+  if (link) setMode("rules", link.dataset.rule);
+});
+$("#rules-toc").addEventListener("click", e => {
+  const a = e.target.closest("a");
+  if (!a) return;
+  e.preventDefault();
+  document.querySelector(a.getAttribute("href"))?.scrollIntoView({ behavior: "smooth" });
+});
+
+// При печати с любого шага (Ctrl+P) лист всё равно актуален
+window.addEventListener("beforeprint", () => { renderSheet(); renderCheat(); });
+
+// Старт: продолжаем последнего персонажа, если он есть
+(function init() {
+  const last = roster.lastId && roster.characters[roster.lastId];
+  let data = null;
+  try { data = last ? sanitizeCharacter(last) : null; } catch { data = null; }
+  loadCharacter(data || blankCharacter());
+  goTo(data ? Math.min(data.step, firstInvalidStep() ?? TOTAL_STEPS) : 1);
+})();
+</script>
+</body>
+</html>
