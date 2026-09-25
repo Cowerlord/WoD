@@ -265,7 +265,10 @@ button.big { display: block; width: 100%; font-size: 1.2rem; padding: 18px; marg
 .sheet section { break-inside: avoid; page-break-inside: avoid; }
 .sheet .blank { display: inline-block; min-width: 16mm; border-bottom: 1px solid #1a1112; }
 .sheet .track { display: inline-flex; gap: 4px; vertical-align: middle; }
-.sheet .track i, .sheet .box { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #1a1112; vertical-align: middle; }
+.sheet .track i, .sheet .box { display: inline-block; width: 14px; height: 14px; border: 1.5px solid #1a1112; vertical-align: middle; }
+.sheet .cb > .track, .sheet .hum > .track { display: flex; flex-wrap: wrap; margin: 3px 0 2px; }
+.sheet .hum > .track { display: grid; grid-template-columns: repeat(5, 14px); gap: 3px; }
+.sheet .hum .note { font-size: 8.5pt; line-height: 1.25; }
 .sheet .lines div { border-bottom: 1px solid #999; height: 18px; }
 
 /* Блок 1: шапка в одну строку */
@@ -277,9 +280,12 @@ button.big { display: block; width: 100%; font-size: 1.2rem; padding: 18px; marg
 .sh-name { font-family: var(--font-title); font-size: 15pt; font-weight: 700; color: #6b0000; line-height: 1.1; }
 .sh-name.long { font-size: 11pt; }
 
-/* Блоки 2–4: три колонки */
-.sh-cols { display: grid; grid-template-columns: 1fr 1fr 1.7fr; gap: 12px; }
+/* Блоки 2–5: характеристики · бой · навыки · дисциплины */
+.sh-cols { display: grid; grid-template-columns: .75fr .8fr 1.1fr 1.7fr; gap: 10px; }
 .sh-cols > section { min-width: 0; }
+.sh-cols h2 { letter-spacing: .05em; }
+.sh-cols > section:first-child h2 { font-size: 8pt; letter-spacing: .02em; }
+.sheet .surge { hyphens: auto; -webkit-hyphens: auto; }
 
 .ab-table { width: 100%; border-collapse: collapse; }
 .ab-table td { border-bottom: 1px solid #bbb; padding: 3px 4px; }
@@ -287,12 +293,15 @@ button.big { display: block; width: 100%; font-size: 1.2rem; padding: 18px; marg
 .ab-table td { padding: 5px 4px; }
 .ab-table .ab-v { text-align: center; }
 .ab-table .ab-m { text-align: right; font-weight: 700; font-size: 15pt; }
-.surge { font-size: 10pt; margin: 6px 0 0; padding: 5px 6px; border: 1px dashed #6b0000; }
+.surge { font-size: 8.5pt; line-height: 1.25; margin: 6px 0 0; padding: 4px 5px; border: 1px dashed #6b0000; }
 
 .cb { border: 1.5px solid #1a1112; border-radius: 6px; padding: 4px 8px; margin-bottom: 6px; }
 .cb .row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; flex-wrap: wrap; }
 .cb .v { font-size: 20pt; font-weight: 700; line-height: 1.1; }
 .cb .note { font-size: 9.5pt; }
+.cb.wpn .v { font-size: 15pt; }
+.cb.wpn .lbl { font-size: 8pt; color: #1a1112; font-weight: 700; }
+.cb.wpn .note + .row { margin-top: 3px; }
 
 .dsc { margin-bottom: 8px; }
 .dsc-name { font-family: var(--font-sheet); font-weight: 700; font-size: 11.5pt; color: #6b0000; }
@@ -301,9 +310,6 @@ button.big { display: block; width: 100%; font-size: 1.2rem; padding: 18px; marg
 .dsc .atk { font-size: 10pt; padding-left: 6px; border-left: 2px solid #6b0000; }
 
 /* Блок 5: оружие */
-.wp { display: grid; grid-template-columns: 1.3fr 1fr 1.3fr 2fr; gap: 10px; border: 1.5px solid #1a1112; border-radius: 6px; padding: 6px 8px; }
-.wp > div { min-width: 0; }
-.wp .big { font-size: 12.5pt; font-weight: 700; }
 
 /* Шпаргалка */
 .cheat table { width: 100%; border-collapse: collapse; font-size: 10.5pt; }
@@ -336,14 +342,24 @@ html.pdf-busy, html.pdf-busy body { overflow: hidden; }
 .skill-pick { flex: 1 1 220px; }
 .clan-skill { margin: 0 0 10px; }
 .armor-field { max-width: 480px; }
-.sheet .sk-table td { padding: 3px 4px; font-size: 10pt; }
-.sheet .sk-table .ab-m { font-size: 12pt; }
+.sheet .sk-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.sheet .sk-table th:nth-child(2) { width: 30%; }
+.sheet .sk-table th:nth-child(3) { width: 13%; }
+.sheet .sk-table th:nth-child(4) { width: 15%; }
+.sheet .sk-table th { font-family: var(--font-title); font-size: 6.5pt; font-weight: 400; letter-spacing: .06em; text-transform: uppercase;
+  color: #555; text-align: right; padding: 0 2px 1px; background: none; border-bottom: 1px solid #6b0000; }
+.sheet .sk-table th:first-child { text-align: left; }
+.sheet .sk-table td { border-bottom: 1px solid #ddd; padding: 1px 2px; font-size: 8.5pt; line-height: 1.2; hyphens: auto; -webkit-hyphens: auto; }
+.sheet .sk-table .sk-n { text-align: right; white-space: nowrap; font-size: 8pt; color: #555; }
+.sheet .sk-table .sk-t { text-align: right; white-space: nowrap; font-size: 10pt; font-weight: 700; }
+.sheet .sk-table tr.own td { font-weight: 700; color: #6b0000; }
+.sheet .sk-hint { font-size: 8pt; color: #555; margin: 0 0 3px; line-height: 1.2; }
+.sheet .mastery { font-size: 10pt; margin: 0; }
 .sheet .portrait {
   height: 46mm; border: 1.5px solid #1a1112; border-radius: 6px; margin: 0 0 6px;
   background: #fff center / cover no-repeat; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 3px;
 }
 .sheet .hum { margin-top: 6px; border: 1.5px solid #1a1112; border-radius: 6px; padding: 4px 8px; }
-.sheet .hum .sq { letter-spacing: .12em; font-size: 11pt; }
 
 /* Мои персонажи */
 .roster { display: grid; gap: 10px; margin-top: 16px; }
@@ -373,6 +389,17 @@ body.auth-on .app > :not(.app-header):not(#auth-screen), body.auth-on .modes, bo
 body:not(.auth-on) #auth-screen { display: none !important; }
 #auth-screen { max-width: 420px; margin: 0 auto; }
 #auth-form button[type=submit] { width: 100%; margin-top: 6px; }
+label.field .pw-wrap {                /* не наследует оформление подписи поля (label.field span) */
+  position: relative; display: block; margin: 0;
+  font-family: var(--font-body); font-size: inherit; letter-spacing: normal; color: inherit;
+}
+#auth-password { font-family: Georgia, "Times New Roman", serif; }   /* без капители: пароль читается как есть */
+.pw-wrap input { padding-right: 48px; }
+.pw-toggle {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  padding: 4px 8px; border: 0; background: none; font-size: 1rem; letter-spacing: 0; opacity: .6;
+}
+.pw-toggle:hover, .pw-toggle.on { background: none; opacity: 1; }
 .user-bar {
   display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
   margin-top: 10px; color: var(--text-dim); font-size: .9rem;
@@ -405,7 +432,7 @@ input[type=number] {
   .steps li::before { font-size: .8rem; }
   .stat-row { grid-template-columns: 1fr; }
   .sheet:not(.pdf-export) { padding: 8mm 5mm; }
-  .sheet:not(.pdf-export) .sh-head, .sheet:not(.pdf-export) .wp { grid-template-columns: 1fr 1fr; }
+  .sheet:not(.pdf-export) .sh-head { grid-template-columns: 1fr 1fr; }
   .sheet:not(.pdf-export) .sh-cols { grid-template-columns: 1fr; }
 }
 
@@ -443,9 +470,9 @@ input[type=number] {
   .sheet * { color: #000 !important; }
   .sheet h2, .sheet .sh-head { border-color: #000 !important; }
   .sheet th { background: #eee !important; }
+  .sheet .sk-table th { background: none !important; }
   .sheet .sh-head { grid-template-columns: 1.5fr 2.2fr 1fr .8fr .7fr !important; }
-  .sheet .sh-cols { grid-template-columns: 1fr 1fr 1.7fr !important; }
-  .sheet .wp { grid-template-columns: 1.3fr 1fr 1.3fr 2fr !important; }
+  .sheet .sh-cols { grid-template-columns: .75fr .8fr 1.1fr 1.7fr !important; }
   .cheat tr.current td { background: none !important; font-weight: inherit !important; }
   #step-5 .panel > h2 { display: none; }
   /* Лист и шпаргалка печатаются по отдельности */
@@ -487,7 +514,10 @@ input[type=number] {
                  placeholder="ник, который выдал Мастер">
         </label>
         <label class="field"><span>Пароль</span>
-          <input type="password" id="auth-password" name="password" autocomplete="current-password" required minlength="6">
+          <span class="pw-wrap">
+            <input type="password" id="auth-password" name="password" autocomplete="current-password" required minlength="6">
+            <button type="button" class="pw-toggle" id="auth-pw-toggle" aria-label="Показать пароль" title="Показать пароль">👁</button>
+          </span>
         </label>
         <div class="error" id="err-auth"></div>
         <button type="submit" class="primary" id="auth-submit">Войти</button>
@@ -1219,8 +1249,8 @@ const BLOOD_SURGE = {
   cost: "1 ПК",
   action: "Бонусное действие, раз в ход",
   duration: "До конца боевой сцены (или 10 минут вне боя)",
-  abilities: ["str", "dex", "con"],      // какие модификаторы можно усилить
-  effect: "Выбранный модификатор (Сила, Ловкость или Выносливость) увеличивается на величину, равную текущей Силе Крови.",
+  scoreBonus: 2,                         // + к самой характеристике (значит, её модификатор растёт на +1)
+  effect: "Любая выбранная характеристика увеличивается на +2 (её модификатор — на +1).",
   note: "Не увеличивает макс. HP!",
 };
 
@@ -1496,6 +1526,7 @@ function stealthAdvNote() {
   return "";
 }
 const stealthRoll = () => mod("dex") + skillBonus("stealth");
+const stealthParts = () => `ЛОВ ${fmt(mod("dex"))}${skillBonus("stealth") ? `, Скрытность ${fmt(skillBonus("stealth"))}` : ""}`;
 
 // Диапазон HP стадии ранения для конкретного персонажа: «11–22», «0», «аггр.»
 function woundRange(stage, maxHP) {
@@ -1809,19 +1840,20 @@ function renderSheet() {
     const up = (w.upgrades || []).find(u => hasDisc(u.discipline, u.level));
     const dmgNote = w.addMod === false ? "без модификатора к урону" : up ? `${discipline(up.discipline).name} ${up.level}` : "";
     const stealth = w.concealable
-      ? `Сложность обнаружения полиции/камер: <b>${STEALTH_DC}</b> (ЛОВ/Скрытность) — ваш бросок d20 ${fmt(stealthRoll())}${esc(stealthAdvNote())}`
+      ? `Бросок d20 <b>${fmt(stealthRoll())}</b> (${esc(stealthParts())})${esc(stealthAdvNote())}. ` +
+        `<b>${STEALTH_DC} и выше</b> — оружие не заметили.`
       : "Прятать нечего — оружия нет.";
     weaponHTML = `
-      <section class="sh-weapon">
-        <h2>Оружие</h2>
-        <div class="wp">
-          <div><span class="lbl">Название</span><span class="big">${esc(w.name)}</span></div>
-          <div><span class="lbl">Попадание</span><span class="big">d20 ${st.attack}</span><br><span class="note">${esc(attackNote(w) || "без бонусов")}</span>
-            ${masteryOf() ? `<br><span class="note">Мастерство: ${esc(masteryOf().name)} ${fmt(masteryOf().bonus)}</span>` : ""}</div>
-          <div><span class="lbl">Урон</span><span class="big">${esc(st.damage)}</span><br><span class="note">${esc(w.type)}${dmgNote ? ` · ${esc(dmgNote)}` : ""}</span></div>
-          <div><span class="lbl">Дистанция · Скрытность</span>${esc(distText(w.distance))}<br><span class="note">${stealth}</span></div>
-        </div>
-      </section>`;
+      <h2>Оружие</h2>
+      <div class="cb wpn">
+        <span class="lbl">${esc(w.name)}</span>
+        <div class="row"><span class="v">d20 ${st.attack}</span><span class="note">попадание</span></div>
+        <div class="note">${esc(attackNote(w) || "без бонусов")}</div>
+        <div class="row"><span class="v">${esc(st.damage)}</span><span class="note">урон</span></div>
+        <div class="note">${esc(w.type)}${dmgNote ? ` · ${esc(dmgNote)}` : ""}</div>
+        <div class="note"><b>Дистанция:</b> ${esc(distText(w.distance))}</div>
+        <div class="note"><b>Спрятать от охраны и полиции:</b> ${stealth}</div>
+      </div>`;
   }
 
   $("#sheet").innerHTML = `
@@ -1841,15 +1873,12 @@ function renderSheet() {
           ${ABILITIES.map(a => `<tr><td class="ab-n">${esc(a.abbr)}</td>
             <td class="ab-v">${state.abilities[a.key] ?? "—"}</td><td class="ab-m">${fmt(mod(a.key))}</td></tr>`).join("")}
         </tbody></table>
-        <p class="surge"><b>${esc(BLOOD_SURGE.name)}</b> (бонусное действие, ${esc(BLOOD_SURGE.cost)}):
-          +${state.bloodPotency} к одному физ. моду —
-          ${BLOOD_SURGE.abilities.map(k => `${abbrOf(k)} (${fmt(mod(k))} ➔ ${fmt(mod(k) + state.bloodPotency)})`).join(" · ")}.
-          <b>${esc(BLOOD_SURGE.note)}</b></p>
+        <p class="surge"><b>${esc(BLOOD_SURGE.name)}</b> — бонусное, ${esc(BLOOD_SURGE.cost)}:
+          +${BLOOD_SURGE.scoreBonus} к любой характеристике (мод. +1) до конца боя.</p>
         <div class="hum">
-          <span class="lbl">Человечность</span>
-          <div class="row"><span class="v" style="font-size:15pt;font-weight:700">${state.humanity}</span>
-            <span class="sq">${"■".repeat(state.humanity)}${"□".repeat(CONFIG.maxHumanity - state.humanity)}</span></div>
-          <div class="note">${esc(humanityEffect(state.humanity))}</div>
+          <span class="lbl">Человечность · на старте ${state.humanity}</span>
+          <span class="track">${"<i></i>".repeat(CONFIG.maxHumanity)}</span>
+          <div class="note">${esc(HUMANITY_SCALE)}</div>
         </div>
       </section>
 
@@ -1863,7 +1892,7 @@ function renderSheet() {
         </div>
         <div class="cb">
           <span class="lbl">Пункты Крови</span>
-          <div class="row"><span class="v">${s.bp} / ${s.bp}</span><span class="track">${"<i></i>".repeat(s.bp)}</span></div>
+          <span class="track">${"<i></i>".repeat(s.bp)}</span>
         </div>
         <div class="cb">
           <span class="lbl">Класс Доспеха</span>
@@ -1879,11 +1908,23 @@ function renderSheet() {
           <div class="row"><span class="v">${s.speed}</span>${note(passiveNote("speed").trim())}</div>
           <div class="note">${esc(speedText(s.speed))}${s.noDash ? ". Рывок нельзя (тяжёлая броня)" : ""}</div>
         </div>
+      </section>
+
+      <section>
+        <h2>Мастерство</h2>
+        ${masteryOf() ? `<p class="mastery"><b>${esc(masteryOf().name)} ${fmt(masteryOf().bonus)}</b> — к попаданию</p>` : `<p class="note">—</p>`}
+        ${weaponHTML}
         <h2>Навыки</h2>
-        <table class="ab-table sk-table"><tbody>
-          ${characterSkills().map(k => `<tr><td>${esc(k.skill.name)} <span class="note">(${esc(abbrOf(k.skill.ability))} +${k.bonus})</span></td>
-            <td class="ab-m">${fmt(k.total)}</td></tr>`).join("") || `<tr><td>—</td></tr>`}
-        </tbody></table>
+        <p class="sk-hint">Проверка: d20 + итог. Итог = мод. характеристики + бонус навыка.</p>
+        <table class="sk-table">
+          <thead><tr><th>Навык</th><th>Хар.</th><th>Нав.</th><th>Итог</th></tr></thead>
+          <tbody>${SKILLS.filter(skillAllowed).map(sk => {
+            const b = skillBonus(sk.id);
+            return `<tr${b ? ` class="own"` : ""}><td>${esc(sk.name)}</td>
+              <td class="sk-n">${esc(abbrOf(sk.ability))} ${fmt(mod(sk.ability))}</td>
+              <td class="sk-n">${b ? fmt(b) : ""}</td><td class="sk-t">${fmt(mod(sk.ability) + b)}</td></tr>`;
+          }).join("")}</tbody>
+        </table>
       </section>
 
       <section>
@@ -1893,7 +1934,6 @@ function renderSheet() {
           <p><span class="lv">${esc(CLAN_ABILITIES[c.id].cost)}:</span> ${esc(CLAN_ABILITIES[c.id].text)}</p></div>` : ""}
       </section>
     </div>
-    ${weaponHTML}
   `;
 }
 
@@ -1946,7 +1986,7 @@ function renderCheat() {
           <td>${b.dc}${b.id === "rage" && c?.id === "brujah" ? " (14 в Праведном гневе)" : ""}</td><td>${esc(b.fail)}</td></tr>`).join("")}</tbody>
       </table>
       <p style="margin:4px 0 0;font-size:9.5pt">Спасбросок ВОС d20 ${fmt(mod("wis"))}. ${esc(BEAST_FAIL)}
-        Ваша Человечность ${state.humanity}: ${esc(humanityEffect(state.humanity).toLowerCase())}</p>
+        Человечность — ${esc(HUMANITY_SCALE.charAt(0).toLowerCase() + HUMANITY_SCALE.slice(1))}</p>
     </section>
 
     <section>
@@ -2042,11 +2082,7 @@ $("#btn-pdf-cheat").addEventListener("click", e =>
 /* =========================================================
    ЧЕЛОВЕЧНОСТЬ
    ========================================================= */
-function humanityEffect(h) {
-  if (h >= 9) return "Проверки Бешенства — с преимуществом.";
-  if (h <= 3) return "Проверки Бешенства — с помехой.";
-  return "Без бонусов и штрафов.";
-}
+const HUMANITY_SCALE = "9–10: Бешенство с преимуществом, 0–3: с помехой.";
 $("#char-humanity").innerHTML = Array.from({ length: CONFIG.maxHumanity + 1 }, (_, h) =>
   `<option value="${h}">${h}${h === CONFIG.startingHumanity ? " (старт)" : ""}</option>`).join("");
 $("#char-humanity").addEventListener("change", e => { state.humanity = Number(e.target.value); });
@@ -2579,6 +2615,23 @@ $("#btn-view-close").addEventListener("click", () => {
    сохранить пароль и дальше подставит его сам. Сессия хранится в браузере и продлевается
    автоматически — вход нужен только после «Выйти» или на новом устройстве.
    ========================================================= */
+// Глаз в поле пароля: показать/скрыть введённое
+$("#auth-pw-toggle").addEventListener("click", e => {
+  const input = $("#auth-password");
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  e.currentTarget.classList.toggle("on", show);
+  const label = show ? "Скрыть пароль" : "Показать пароль";
+  e.currentTarget.title = label;
+  e.currentTarget.setAttribute("aria-label", label);
+  input.focus();
+});
+// Перед отправкой прячем пароль обратно: браузер сохраняет его только из поля type=password
+$("#auth-form").addEventListener("submit", () => {
+  $("#auth-password").type = "password";
+  $("#auth-pw-toggle").classList.remove("on");
+}, true);
+
 function showAuth(message = "") {
   document.body.classList.add("auth-on");
   $("#auth-loading").hidden = true;
@@ -2766,9 +2819,12 @@ function rulesWeapons() {
        Мастер может потребовать проверку.</p>
     <ul>
       <li>Стартовое оружие считается <b>Лёгким/Компактным</b>: его можно спрятать под курткой, в кармане или в складках одежды.</li>
-      <li><b>Проверка:</b> Ловкость (Скрытность) против Пассивного Восприятия наблюдателя
-          (у обычного копа или охранника — <b>${STEALTH_DC}</b>). <b>${STEALTH_DC} и выше — успех</b>, оружие не заметили;
+      <li><b>Проверка:</b> бросок <b>d20 + мод. ЛОВ + бонус навыка Скрытность</b> (если навык взят) против
+          Пассивного Восприятия наблюдателя — у обычного копа или охранника <b>${STEALTH_DC}</b>, у внимательной охраны
+          Мастер может поставить больше. <b>${STEALTH_DC} и выше — успех</b>, оружие не заметили;
           меньше — охрана просит расстегнуть куртку.</li>
+      <li>Пример: ЛОВ +2 и Скрытность +2 — бросок d20 +4, нужно выбросить 6 или больше (шанс 75%).
+          Итоговый бросок уже посчитан на листе в блоке «Оружие».</li>
     </ul>
 
     <h3>Тяжёлое оружие</h3>
@@ -2815,7 +2871,7 @@ function rulesGenerations() {
     <p><b>Сила Крови</b> (Blood Potency) — текущая концентрация и мощь мистической крови внутри вампира.</p>
     <h3>Стартовый статус</h3>
     <p>Персонажи начинают как <b>Неофиты</b> (${CONFIG.generationOptions.join("-е или ")}-е Поколение).
-       Стартовая Сила Крови = <b>${CONFIG.startingBloodPotency}</b> («Интенсификация» даёт +1).
+       Стартовая Сила Крови = <b>${CONFIG.startingBloodPotency}</b>.
        Максимум ПК у игроков — <b>${CONFIG.baseBP}</b>, независимо от Поколения.</p>
 
     <h3>${esc(BLOOD_SURGE.name)}</h3>
@@ -2826,8 +2882,8 @@ function rulesGenerations() {
       <li><b>Длительность:</b> ${esc(BLOOD_SURGE.duration)}</li>
       <li><b>${esc(BLOOD_SURGE.note)}</b></li>
     </ul>
-    <p><i>Пример (Сила Крови 1):</i> Виктор (Ласомбра) имеет модификатор Силы +2. В начале боя он тратит 1 ПК —
-       до конца боя его модификатор Силы +3: растут урон с руки, броски на попадание в ближнем бою и проверки Атлетики.</p>
+    <p><i>Пример:</i> у Виктора (Ласомбра) Сила 14, модификатор +2. В начале боя он тратит 1 ПК —
+       до конца боя Сила 16, модификатор +3: растут урон с руки и проверки Атлетики.</p>
 
     <h3>Таблица развития</h3>
     <p class="hint" style="margin:0 0 6px">Справка по миру: так устроены вампиры разных Поколений. На игроков лимит ПК из таблицы не действует.</p>
