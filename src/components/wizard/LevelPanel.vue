@@ -35,6 +35,10 @@ async function step(delta) {
       и +1 усиление навыка — выдайте его кнопкой «+» в таблице навыков.</p>
     <p class="lvl-budget">Усилений навыков по уровню: положено <b>{{ upgradesDue }}</b>,
       выдано Мастером всего <b>{{ rules.skillsSpentFromMaster() }}</b> (вместе с наградами за события).</p>
+    <div class="lock-row">
+      <span>Сборка: <b>{{ character.locked ? "🔒 зафиксирована" : "открыта" }}</b></span>
+      <button type="button" @click="character.locked = !character.locked">{{ character.locked ? "Разблокировать" : "Зафиксировать" }}</button>
+    </div>
     <p v-if="levels.error" class="error">Уровень: {{ levels.error }}</p>
   </div>
 </template>
@@ -47,4 +51,6 @@ async function step(delta) {
 .lvl-ctrl button { padding: 4px 12px; }
 .lvl-ctrl b { font-size: 1.3rem; color: var(--blood-bright); }
 .lvl-budget { margin: 6px 0 0; }
+.lock-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+.lock-row button { padding: 4px 12px; }
 </style>

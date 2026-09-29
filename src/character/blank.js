@@ -22,6 +22,8 @@ export function blankCharacter() {
   return {
     id: newId(),
     step: 1,
+    stepsVersion: 2,            // 2 — шаги с отдельным «Описанием» (5), «Лист» — 6, «В игре» — 7
+    locked: false,              // «Завершить создание»: сборку меняет только Мастер
     name: "",
     concept: "",
     clanId: null,

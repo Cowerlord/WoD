@@ -6,7 +6,7 @@ import { blankCharacter } from "../character/blank.js";
 import { FILE_FORMAT, sanitizeCharacter, serialize } from "../character/sanitize.js";
 import { characterRules, skillById } from "../character/rules.js";
 import { fetchCharacter, describeError } from "../api/characters.js";
-import { auth } from "./auth.js";
+import { auth, isAdmin } from "./auth.js";
 import { setMode } from "./ui.js";
 import {
   roster, snapshot, isUnchanged, rememberSnap, isRejected, isFull, markKnown,
@@ -86,6 +86,13 @@ watchEffect(() => {
     if (sk && (!rules.skillAllowed(sk) || sk.id === rules.clanSkillId())) character.skills[p.key] = null;
   }
 });
+
+// Сборка зафиксирована: клан, характеристики, Человечность, дисциплины (только рост) и навыки меняет лишь Мастер
+export const buildLocked = () => !!character.locked && !isAdmin();
+export function lockBuild() {
+  character.locked = true;
+  saveCurrent();
+}
 
 export function goTo(step) {
   character.step = Math.min(Math.max(step, 1), TOTAL_STEPS);

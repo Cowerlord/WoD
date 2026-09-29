@@ -1,7 +1,8 @@
 <script setup>
 import { CONFIG } from "../../data/config.js";
 import { CLANS } from "../../data/clans.js";
-import { character, editor, rules, clearError } from "../../stores/editor.js";
+import { character, editor, rules, clearError, buildLocked } from "../../stores/editor.js";
+import LockBanner from "./LockBanner.vue";
 import TextField from "../common/TextField.vue";
 import RuleLink from "../common/RuleLink.vue";
 import ClanDetails from "../common/ClanDetails.vue";
@@ -19,6 +20,7 @@ const generationOptions = CONFIG.adminGenerations.map(g => ({
 }));
 
 function selectClan(id) {
+  if (buildLocked()) return;
   if (character.clanId !== id) { character.disciplines = {}; character.clanSkill = null; }
   character.clanId = id;
   clearError(1);
@@ -28,6 +30,7 @@ function selectClan(id) {
 <template>
   <div class="panel">
     <h2>Кто ты, дитя ночи?</h2>
+    <LockBanner />
     <TextField v-model="character.name" label="Имя" :max="CONFIG.nameMaxLength" placeholder="Например: Виктор Ланской" />
     <TextField v-model="character.concept" label="Концепт" :max="CONFIG.conceptMaxLength"
                placeholder="Например: Бывший следователь, потерявший веру" />
@@ -36,7 +39,7 @@ function selectClan(id) {
       <AlignmentWheel v-model="character.alignment" :disabled="editor.owner.readOnly" />
     </div>
     <label class="field"><span>Человечность</span>
-      <VSelect v-model="character.humanity" :options="humanityOptions" />
+      <VSelect v-model="character.humanity" :options="humanityOptions" :disabled="buildLocked()" />
     </label>
     <label v-if="isAdmin()" class="field"><span>Поколение (меняет только Мастер)</span>
       <VSelect v-model="character.generation" :options="generationOptions" />
@@ -47,8 +50,8 @@ function selectClan(id) {
 
     <h3>Клан</h3>
     <div class="card-grid">
-      <label v-for="c in CLANS" :key="c.id" class="card" :class="{ selected: c.id === character.clanId }">
-        <input type="radio" name="clan" :value="c.id" :checked="c.id === character.clanId" @change="selectClan(c.id)">
+      <label v-for="c in CLANS" :key="c.id" class="card" :class="{ selected: c.id === character.clanId, locked: buildLocked() && c.id !== character.clanId }">
+        <input type="radio" name="clan" :value="c.id" :checked="c.id === character.clanId" :disabled="buildLocked()" @change="selectClan(c.id)">
         {{ c.name }} <small> {{ c.subName }}</small>
       </label>
     </div>
@@ -62,6 +65,7 @@ function selectClan(id) {
 </template>
 
 <style scoped>
+.card.locked { opacity: .45; cursor: not-allowed; }
 .field-title { display: block; font-family: var(--font-title); font-size: .8rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 4px; }
 .gen { margin: 0 0 14px; }
 .gen b { color: var(--gold); }

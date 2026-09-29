@@ -1,6 +1,6 @@
 import { CONFIG, TOTAL_STEPS } from "../data/config.js";
 import { CLANS } from "../data/clans.js";
-import { DISCIPLINE_PASSIVES, SAVE_DC } from "../data/disciplines.js";
+import { DISCIPLINE_PASSIVES, SAVE_DC, SKILL_PASSIVES } from "../data/disciplines.js";
 import { SKILLS, SKILL_PICKS, SKILL_MAX, CLAN_SKILL_BONUS } from "../data/skills.js";
 import { WEAPONS, MASTERY, STEALTH_DC } from "../data/weapons.js";
 import { CLOTHING } from "../data/clothing.js";
@@ -65,7 +65,8 @@ export function characterRules(ch) {
   // Бонус навыка: клан + два стартовых выбора + выданное Мастером; не больше SKILL_MAX
   const skillBonus = id => Math.min(SKILL_MAX, (clanSkillId() === id ? clanSkillValue() : 0)
     + SKILL_PICKS.reduce((sum, p) => sum + (ch.skills[p.key] === id ? p.bonus : 0), 0)
-    + (ch.bonusSkills?.[id] || 0));
+    + (ch.bonusSkills?.[id] || 0)
+    + SKILL_PASSIVES.filter(p => p.skill === id && hasDisc(p.discipline, p.level)).reduce((s, p) => s + p.bonus, 0));
   // Характеристика броска: у Запугивания — выбранная игроком (СИЛ или ХАР)
   const skillAbility = sk => sk.abilities?.includes(ch.skillAbility?.[sk.id]) ? ch.skillAbility[sk.id] : sk.ability;
   const skillTotal = sk => mod(skillAbility(sk)) + skillBonus(sk.id);
@@ -171,6 +172,7 @@ export function characterRules(ch) {
       return "";
     },
     5() { return ""; },
+    6() { return ""; },
   };
 
   function firstInvalidStep(upTo = TOTAL_STEPS - 1) {

@@ -94,7 +94,11 @@ export function sanitizeCharacter(d) {
   out.armorId = ARMOR.some(a => a.id === d.armorId) ? d.armorId : null;
   const clothing = CLOTHING.find(c => c.id === d.clothingId);
   out.clothingId = clothing && !clothing.excludeClans?.includes(out.clanId) ? clothing.id : DEFAULT_CLOTHING;
-  out.step = clampInt(d.step, 1, TOTAL_STEPS, 1);
+  // Старые персонажи (до шага «Описание»): «Лист» был 5-м, «В игре» — 6-м
+  let step = clampInt(d.step, 1, TOTAL_STEPS, 1);
+  if ((d.stepsVersion ?? 1) < 2 && step >= 5) step = Math.min(TOTAL_STEPS, step + 1);
+  out.step = step;
+  out.locked = d.locked === true;
   const bio = d.bio && typeof d.bio === "object" ? d.bio : {};
   out.bio = Object.fromEntries(BIO_FIELDS.map(f => [f.id, cleanBio(bio[f.id])]));
   out.alignment = ALIGNMENTS.some(a => a.id === d.alignment) ? d.alignment : null;

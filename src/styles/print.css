@@ -23,8 +23,12 @@
   .rules-body .entry, .rules-body tr { break-inside: avoid; page-break-inside: avoid; }
   .app { max-width: none; padding: 0; margin: 0; min-height: 0; display: block; }
   .step { display: none !important; }
-  #step-5 { display: block !important; animation: none; }
-  #step-5 > .panel { background: none; border: 0; box-shadow: none; padding: 0; }
+  /* Лист и шпаргалка — шаг 6, описание — шаг 5 */
+  #step-6 { display: block !important; animation: none; }
+  body.print-bio #step-6 { display: none !important; }
+  body.print-bio #step-5 { display: block !important; animation: none; }
+  #step-5 > .panel, #step-6 > .panel { background: none; border: 0; box-shadow: none; padding: 0; }
+  #step-5 .panel > h2, #step-5 .panel > .hint { display: none; }
 
   .sheet {
     background: #fff !important; color: #000 !important;
@@ -38,7 +42,7 @@
   .sheet .sh-head { grid-template-columns: 1.5fr 2.2fr 1fr .8fr .7fr !important; }
   .sheet .sh-cols { grid-template-columns: .75fr .8fr 1.1fr 1.7fr !important; }
   .cheat tr.current td { background: none !important; font-weight: inherit !important; }
-  #step-5 .panel > h2 { display: none; }
+  #step-6 .panel > h2 { display: none; }
   body:not(.print-cheat) #cheat-block { display: none !important; }
   body.print-cheat #sheet-block { display: none !important; }
   body:not(.print-bio) #bio-block { display: none !important; }

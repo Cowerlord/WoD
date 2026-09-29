@@ -5,6 +5,7 @@ import StepClan from "./StepClan.vue";
 import StepAbilities from "./StepAbilities.vue";
 import StepDisciplines from "./StepDisciplines.vue";
 import StepWeapon from "./StepWeapon.vue";
+import StepBio from "./StepBio.vue";
 import StepSheet from "./StepSheet.vue";
 import PlayScreen from "../play/PlayScreen.vue";
 
@@ -13,6 +14,7 @@ const steps = [
   { title: "Характеристики", component: StepAbilities },
   { title: "Дисциплины", component: StepDisciplines },
   { title: "Оружие", component: StepWeapon },
+  { title: "Описание", component: StepBio },
   { title: "Лист", component: StepSheet },
   { title: "В игре", component: PlayScreen },
 ];

@@ -29,9 +29,12 @@ export const ABILITIES = [
   { key: "cha", name: "Харизма", abbr: "ХАР" },
 ];
 
-export const TOTAL_STEPS = 6;
-export const SHEET_STEP = 5;
-export const PLAY_STEP = 6;
+export const TOTAL_STEPS = 7;
+export const BIO_STEP = 5;
+export const SHEET_STEP = 6;
+export const PLAY_STEP = 7;
+// Шаги, которые замораживает «Завершить создание» (клан, характеристики, дисциплины и навыки)
+export const BUILD_STEPS = [1, 2, 3];
 
 // Шкала Сложностей проверок для Мастера
 export const DIFFICULTY = [

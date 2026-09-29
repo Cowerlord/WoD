@@ -1,7 +1,7 @@
 <script setup>
 import { ABILITIES } from "../../data/config.js";
 import { SKILLS, CORE_SKILLS, SKILL_PICKS } from "../../data/skills.js";
-import { character, editor, rules, clearError } from "../../stores/editor.js";
+import { character, editor, rules, clearError, buildLocked } from "../../stores/editor.js";
 import { isAdmin } from "../../stores/auth.js";
 import { skillById } from "../../character/rules.js";
 import { abbrOf, fmt } from "../../character/format.js";
@@ -24,7 +24,10 @@ const optionsFor = pick => [
   })),
 ];
 
+const frozen = () => editor.owner.readOnly || buildLocked();
+
 function choose(pick, id) {
+  if (frozen()) return;
   character.skills[pick.key] = id || null;
   clearError(3);
 }
@@ -32,12 +35,14 @@ function choose(pick, id) {
 // Клан: дополнительный навык +2 или один из основных +1
 const clanOptions = () => rules.clanSkillOptions().map((id, i) => ({ id, sk: skillById(id), value: i === 0 ? 2 : 1 }));
 function chooseClan(id) {
+  if (frozen()) return;
   character.clanSkill = id;
   for (const p of SKILL_PICKS) if (character.skills[p.key] === id) character.skills[p.key] = null;   // клановый навык нельзя выбрать ещё раз
   clearError(3);
 }
 
 function setAbility(skillId, ability) {
+  if (frozen()) return;
   if (!character.skillAbility) character.skillAbility = {};
   character.skillAbility[skillId] = ability;
 }
@@ -50,7 +55,7 @@ function setAbility(skillId, ability) {
       <div class="clan-opts">
         <label v-for="o in clanOptions()" :key="o.id" class="clan-opt" :class="{ on: rules.clanSkillId() === o.id && character.clanSkill }">
           <input type="radio" name="clan-skill" :value="o.id" :checked="character.clanSkill === o.id"
-                 :disabled="editor.owner.readOnly" @change="chooseClan(o.id)">
+                 :disabled="frozen()" @change="chooseClan(o.id)">
           <b>{{ o.sk.name }} +{{ o.value }}</b>
           <small>{{ o.sk.core ? "основной" : "дополнительный" }} · {{ o.sk.hint }}</small>
         </label>
@@ -59,7 +64,7 @@ function setAbility(skillId, ability) {
 
     <div class="skill-row">
       <label v-for="p in SKILL_PICKS" :key="p.key" class="field skill-pick"><span>Основной навык +{{ p.bonus }}</span>
-        <VSelect :model-value="character.skills[p.key]" :options="optionsFor(p)" :disabled="editor.owner.readOnly"
+        <VSelect :model-value="character.skills[p.key]" :options="optionsFor(p)" :disabled="frozen()"
                  @update:model-value="choose(p, $event)" />
         <small v-if="skillById(character.skills[p.key])" class="skill-hint">{{ skillById(character.skills[p.key]).hint }}</small>
       </label>
@@ -68,7 +73,7 @@ function setAbility(skillId, ability) {
     <div v-for="sk in choiceSkills" :key="sk.id" class="ability-choice">
       <span>{{ sk.name }} бросается через:</span>
       <button v-for="a in sk.abilities" :key="a" type="button" :class="{ on: rules.skillAbility(sk) === a }"
-              :disabled="editor.owner.readOnly" @click="setAbility(sk.id, a)">
+              :disabled="frozen()" @click="setAbility(sk.id, a)">
         {{ ABILITIES.find(x => x.key === a).name }} ({{ fmt(rules.mod(a)) }})</button>
     </div>
 

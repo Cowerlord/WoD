@@ -1,6 +1,7 @@
 <script setup>
 import { CONFIG } from "../../data/config.js";
-import { character, editor, rules, showError, clearError } from "../../stores/editor.js";
+import { character, editor, rules, showError, clearError, buildLocked } from "../../stores/editor.js";
+import LockBanner from "./LockBanner.vue";
 import { isAdmin } from "../../stores/auth.js";
 import { clampInt } from "../../character/sanitize.js";
 import { discipline, dots } from "../../character/format.js";
@@ -12,7 +13,11 @@ import CombatPreview from "./CombatPreview.vue";
 const levels = Array.from({ length: CONFIG.maxDisciplineLevel + 1 }, (_, l) => l);
 const pointsLeft = () => rules.pointsBudget() - rules.pointsSpent();
 
+// После «Завершить создание» уровни дисциплин у игрока только растут
+const lockedBelow = (id, lvl) => buildLocked() && lvl < rules.discLevel(id);
+
 function setLevel(id, lvl) {
+  if (lockedBelow(id, lvl)) return;
   if (lvl - rules.discLevel(id) > pointsLeft()) { showError(3, "Не хватает очков Дисциплин."); return; }
   if (lvl === 0) delete character.disciplines[id];
   else character.disciplines[id] = lvl;
@@ -25,6 +30,7 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
 <template>
   <div class="panel">
     <h2>Дисциплины</h2>
+    <LockBanner />
     <p class="hint">У клана 4 дисциплины, у вас <b>3 очка</b>: уровень дисциплины стоит столько очков, какой он по счёту.
       Можно взять три дисциплины на ур. 1, одну на ур. 2 и одну на ур. 1 — или одну сразу на ур. 3.
       <RuleLink rule="disciplines">Все дисциплины</RuleLink></p>
@@ -49,7 +55,7 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
                 <span v-if="rules.clan().extraDiscipline?.id === id" class="extra-tag">4-я дисциплина клана</span></b>
               <span class="lvl-picker" title="Уровень">
                 <button v-for="lvl in levels" :key="lvl" type="button" :class="{ on: lvl === rules.discLevel(id) }"
-                        :disabled="lvl - rules.discLevel(id) > pointsLeft()" @click="setLevel(id, lvl)">
+                        :disabled="lvl - rules.discLevel(id) > pointsLeft() || lockedBelow(id, lvl)" @click="setLevel(id, lvl)">
                   {{ lvl === 0 ? "—" : lvl }}
                 </button>
               </span>

@@ -1,7 +1,8 @@
 <script setup>
 import { computed } from "vue";
 import { ABILITIES, CONFIG } from "../../data/config.js";
-import { character, editor, clearError } from "../../stores/editor.js";
+import { character, editor, clearError, buildLocked } from "../../stores/editor.js";
+import LockBanner from "./LockBanner.vue";
 import { modOf, fmt } from "../../character/format.js";
 import RuleLink from "../common/RuleLink.vue";
 import VSelect from "../common/VSelect.vue";
@@ -28,6 +29,7 @@ const optionsFor = key => [
 ];
 
 function assign(key, v) {
+  if (buildLocked()) return;
   const holder = v == null ? null : holderOf(key, v);
   if (holder) character.abilities[holder.key] = character.abilities[key];   // обмен: отдаём своё прежнее значение (или пусто)
   character.abilities[key] = v;
@@ -38,6 +40,7 @@ function assign(key, v) {
 <template>
   <div class="panel">
     <h2>Характеристики</h2>
+    <LockBanner />
     <p class="hint">Распределите значения из массива. Каждое число можно использовать только один раз.
       Выберите занятое число — характеристики поменяются значениями (↔).
       <RuleLink rule="basics">Как считаются модификаторы?</RuleLink></p>
@@ -46,7 +49,7 @@ function assign(key, v) {
       <div v-for="a in ABILITIES" :key="a.key" class="ability">
         <div class="name">{{ a.name }}</div>
         <div class="abbr">{{ a.abbr }}</div>
-        <VSelect class="ab-select" :model-value="character.abilities[a.key]" :options="optionsFor(a.key)"
+        <VSelect class="ab-select" :model-value="character.abilities[a.key]" :options="optionsFor(a.key)" :disabled="buildLocked()"
                  @update:model-value="assign(a.key, $event)" />
         <div class="mod">{{ character.abilities[a.key] == null ? "" : fmt(modOf(character.abilities[a.key])) }}</div>
       </div>

@@ -30,7 +30,7 @@ const click = sk => { if (props.roll) rollSkill(sk); };
   <table class="sk-table" :class="{ 'sk-edit': edit }">
     <colgroup><col><col class="c-n"><col class="c-t"></colgroup>
     <tbody v-for="g in groups" :key="g.a.key">
-      <tr class="sk-group"><th colspan="3">{{ g.a.name }} <span>{{ fmt(rules.mod(g.a.key)) }}</span></th></tr>
+      <tr class="sk-group"><th colspan="3">{{ g.a.name }} <small>{{ fmt(rules.mod(g.a.key)) }}</small></th></tr>
       <tr v-for="sk in g.list" :key="sk.id" :class="{ own: rules.skillBonus(sk.id), rollable: roll, extra: !sk.core }"
           :title="roll ? 'Бросить проверку' : sk.hint" @click="click(sk)">
         <td>{{ sk.name }}<small v-if="!sk.core" class="sk-extra"> доп.</small></td>
