@@ -1,9 +1,8 @@
 <script setup>
-import { SKILLS } from "../../data/skills.js";
 import { rules } from "../../stores/editor.js";
-import { fmt, abbrOf } from "../../character/format.js";
+import { fmt } from "../../character/format.js";
 import SheetWeapon from "./SheetWeapon.vue";
-import { rollSkill } from "../../stores/rolls.js";
+import SkillsTable from "../common/SkillsTable.vue";
 </script>
 
 <template>
@@ -18,18 +17,7 @@ import { rollSkill } from "../../stores/rolls.js";
       <div class="note">Пакеты крови: <span class="track"><i v-for="n in rules.clothing().bloodPacks" :key="n"></i></span></div>
     </div>
     <h2>Навыки</h2>
-    <p class="sk-hint">Проверка: d20 + итог. Итог = мод. характеристики + бонус навыка.</p>
-    <table class="sk-table">
-      <thead><tr><th>Навык</th><th>Хар.</th><th>Нав.</th><th>Итог</th></tr></thead>
-      <tbody>
-        <tr v-for="sk in SKILLS.filter(rules.skillAllowed)" :key="sk.id" class="rollable" :class="{ own: rules.skillBonus(sk.id) }"
-            title="Бросить проверку" @click="rollSkill(sk)">
-          <td>{{ sk.name }}</td>
-          <td class="sk-n">{{ abbrOf(sk.ability) }} {{ fmt(rules.mod(sk.ability)) }}</td>
-          <td class="sk-n">{{ rules.skillBonus(sk.id) ? fmt(rules.skillBonus(sk.id)) : "" }}</td>
-          <td class="sk-t">{{ fmt(rules.mod(sk.ability) + rules.skillBonus(sk.id)) }}</td>
-        </tr>
-      </tbody>
-    </table>
+    <p class="sk-hint">Проверка: d20 + итог (мод. характеристики + бонус навыка).</p>
+    <SkillsTable roll />
   </section>
 </template>

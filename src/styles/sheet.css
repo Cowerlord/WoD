@@ -78,9 +78,6 @@
 .sheet.pdf-export th { background: #eee; }
 .sheet.pdf-export tr.current td { background: none; font-weight: inherit; }
 .sheet .sk-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.sheet .sk-table th:nth-child(2) { width: 30%; }
-.sheet .sk-table th:nth-child(3) { width: 13%; }
-.sheet .sk-table th:nth-child(4) { width: 15%; }
 .sheet .sk-table th { font-family: var(--font-title); font-size: 6.5pt; font-weight: 400; letter-spacing: .06em; text-transform: uppercase;
   color: #555; text-align: right; padding: 0 2px 1px; background: none; border-bottom: 1px solid #6b0000; }
 .sheet .sk-table th:first-child { text-align: left; }
@@ -88,6 +85,8 @@
 .sheet .sk-table .sk-n { text-align: right; white-space: nowrap; font-size: 8pt; color: #555; }
 .sheet .sk-table .sk-t { text-align: right; white-space: nowrap; font-size: 10pt; font-weight: 700; }
 .sheet .sk-table tr.own td { font-weight: 700; color: #6b0000; }
+.sheet .sk-table .sk-group th { font-size: 7.5pt; color: #6b0000; border-bottom: 1px solid #6b0000; padding: 5px 2px 1px; }
+.sheet .sk-table tbody:first-of-type .sk-group th { padding-top: 1px; }
 .sheet .sk-hint { font-size: 8pt; color: #555; margin: 0 0 3px; line-height: 1.2; }
 .sheet .mastery { font-size: 10pt; margin: 0; }
 .sheet .portrait {

@@ -19,7 +19,7 @@ const generationOptions = CONFIG.adminGenerations.map(g => ({
 }));
 
 function selectClan(id) {
-  if (character.clanId !== id) character.disciplines = {};
+  if (character.clanId !== id) { character.disciplines = {}; character.clanSkill = null; }
   character.clanId = id;
   clearError(1);
 }

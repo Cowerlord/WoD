@@ -189,19 +189,20 @@ $$;
 revoke all on function public.ping() from public;
 grant execute on function public.ping() to anon, authenticated;
 
--- ---------- Поля, которые меняет только админ: доп. очки, Поколение, Сила Крови ----------
+-- ---------- Поля, которые меняет только админ: доп. очки, Поколение, Сила Крови, навыки от Мастера ----------
 -- Игрок при создании получает стартовые значения, при сохранении у него остаются прежние
 create or replace function private.guard_admin_fields()
 returns trigger language plpgsql security definer set search_path = '' as $$
 begin
   if public.is_admin() then return new; end if;
   if tg_op = 'INSERT' then
-    new.data := new.data || jsonb_build_object('bonusPoints', 0, 'generation', 12, 'bloodPotency', 1);
+    new.data := new.data || jsonb_build_object('bonusPoints', 0, 'generation', 12, 'bloodPotency', 1, 'bonusSkills', '{}'::jsonb);
   else
     new.data := new.data || jsonb_build_object(
       'bonusPoints', coalesce(old.data -> 'bonusPoints', '0'),
       'generation', coalesce(old.data -> 'generation', '12'),
-      'bloodPotency', coalesce(old.data -> 'bloodPotency', '1'));
+      'bloodPotency', coalesce(old.data -> 'bloodPotency', '1'),
+      'bonusSkills', coalesce(old.data -> 'bonusSkills', '{}'::jsonb));
   end if;
   return new;
 end $$;
@@ -235,3 +236,17 @@ create policy "campaign: меняет админ" on public.campaign
   for update to authenticated using ((select public.is_admin())) with check ((select public.is_admin()));
 revoke all on public.campaign from anon;
 grant select, update on public.campaign to authenticated;
+
+-- ---------- Скрытый уровень персонажа (1–10): читает и меняет только админ ----------
+create table if not exists public.character_levels (
+  character_id text primary key references public.characters(id) on delete cascade,
+  level        int  not null default 1 check (level between 1 and 10),
+  updated_at   timestamptz not null default now()
+);
+alter table public.character_levels enable row level security;
+drop policy if exists "levels: только админ" on public.character_levels;
+create policy "levels: только админ" on public.character_levels
+  for all to authenticated
+  using ((select public.is_admin())) with check ((select public.is_admin()));
+revoke all on public.character_levels from anon;
+grant select, insert, update, delete on public.character_levels to authenticated;

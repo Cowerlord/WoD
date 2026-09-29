@@ -1,7 +1,7 @@
 import { CONFIG, TOTAL_STEPS } from "../data/config.js";
 import { CLANS } from "../data/clans.js";
 import { DISCIPLINE_PASSIVES, SAVE_DC } from "../data/disciplines.js";
-import { SKILLS, SKILL_PICKS } from "../data/skills.js";
+import { SKILLS, SKILL_PICKS, SKILL_MAX, CLAN_SKILL_BONUS } from "../data/skills.js";
 import { WEAPONS, MASTERY, STEALTH_DC } from "../data/weapons.js";
 import { CLOTHING } from "../data/clothing.js";
 import { generationInfo } from "../data/blood.js";
@@ -54,10 +54,25 @@ export function characterRules(ch) {
   const passiveNote = key => activePassives().filter(p => p[key])
     .map(p => ` ${fmt(p[key])} (${discipline(p.discipline).name} ${p.level})`).join("");
 
-  const clanSkillId = () => clan()?.skill || null;
-  const skillAllowed = sk => !sk.requires || hasDisc(sk.requires) || clanSkillId() === sk.id;
-  const skillBonus = id => (clanSkillId() === id ? 2 : 0)
-    + SKILL_PICKS.reduce((sum, p) => sum + (ch.skills[p.key] === id ? p.bonus : 0), 0);
+  // Навык от клана: выбранный игроком вариант (по умолчанию — дополнительный навык клана)
+  const clanSkillOptions = () => { const o = clan()?.clanSkills; return o ? [o.bonus, ...o.core] : []; };
+  const clanSkillId = () => {
+    const o = clan()?.clanSkills;
+    if (!o) return null;
+    return clanSkillOptions().includes(ch.clanSkill) ? ch.clanSkill : o.bonus;
+  };
+  const clanSkillValue = () => clanSkillId() && skillById(clanSkillId())?.core ? CLAN_SKILL_BONUS.core : CLAN_SKILL_BONUS.bonus;
+  // Бонус навыка: клан + два стартовых выбора + выданное Мастером; не больше SKILL_MAX
+  const skillBonus = id => Math.min(SKILL_MAX, (clanSkillId() === id ? clanSkillValue() : 0)
+    + SKILL_PICKS.reduce((sum, p) => sum + (ch.skills[p.key] === id ? p.bonus : 0), 0)
+    + (ch.bonusSkills?.[id] || 0));
+  // Характеристика броска: у Запугивания — выбранная игроком (СИЛ или ХАР)
+  const skillAbility = sk => sk.abilities?.includes(ch.skillAbility?.[sk.id]) ? ch.skillAbility[sk.id] : sk.ability;
+  const skillTotal = sk => mod(skillAbility(sk)) + skillBonus(sk.id);
+  // На листе: все основные навыки + дополнительные, которые у персонажа есть
+  const skillAllowed = sk => sk.core || skillBonus(sk.id) > 0;
+  const visibleSkills = () => SKILLS.filter(skillAllowed);
+  const skillsSpentFromMaster = () => Object.values(ch.bonusSkills || {}).reduce((s, v) => s + v, 0);
 
   function combatStats() {
     const a = armor();
@@ -147,6 +162,7 @@ export function characterRules(ch) {
       const spent = pointsSpent();
       if (spent !== pointsBudget()) return `Нужно распределить ровно ${pointsBudget()} очк. Дисциплин (распределено: ${spent}).`;
       if (SKILL_PICKS.some(p => !ch.skills[p.key])) return "Выберите оба навыка: на +2 и на +1.";
+      if (clan()?.clanSkills && !clanSkillOptions().includes(ch.clanSkill)) return "Выберите навык от клана.";
       return "";
     },
     4() {
@@ -165,7 +181,7 @@ export function characterRules(ch) {
   return {
     mod, baseMod, surgeBonus, activeEffects, activeConditions, rollBonus, noWoundPenalty, clan, weapon, armor, clothing, clothingAllowed, stealthDC, generation, maxBP, frenzy,
     discLevel, hasDisc, learnedDisciplines, pointsSpent, pointsBudget, passiveNote,
-    clanSkillId, skillAllowed, skillBonus,
+    clanSkillId, clanSkillOptions, clanSkillValue, skillAllowed, skillBonus, skillAbility, skillTotal, visibleSkills, skillsSpentFromMaster,
     combatStats, fillTokens, saveDCs,
     weaponDie, weaponUpgrade, mastery, attackNote, saveDCof, severeDC, weaponStats,
     stealthAdvNote, stealthRoll, stealthParts, healAmount, live,

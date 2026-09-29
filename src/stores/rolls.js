@@ -44,7 +44,7 @@ function check(label, mod, ctx, extra = {}) {
 
 export const rollAbility = key => check(`Проверка: ${ABILITIES.find(a => a.key === key).name}`, rules.mod(key), { ability: key });
 
-export const rollSkill = sk => check(sk.name, rules.mod(sk.ability) + rules.skillBonus(sk.id), { ability: sk.ability, skill: sk.id });
+export const rollSkill = sk => check(sk.name, rules.skillTotal(sk), { ability: rules.skillAbility(sk), skill: sk.id });
 
 export const rollInitiative = () => check("Инициатива", rules.combatStats().init, { initiative: true });
 

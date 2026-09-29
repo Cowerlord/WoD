@@ -33,7 +33,10 @@ export function blankCharacter() {
     bloodPotency: CONFIG.startingBloodPotency,
     humanity: CONFIG.startingHumanity,
     avatar: null,
-    skills: { two: null, one: null },
+    skills: { two: null, one: null },   // стартовые выборы из основных навыков: +2 и +1
+    clanSkill: null,            // навык от клана (id из clan.clanSkills): дополнительный +2 или основной +1
+    skillAbility: {},           // характеристика броска для навыков с выбором: { intimidation: "str" | "cha" }
+    bonusSkills: {},            // навыки от Мастера (события, уровни): { id: бонус } — меняет только админ
     armorId: null,
     bio: blankBio(),            // описание персонажа — отдельный лист
     alignment: null,            // мировоззрение (id из ALIGNMENTS) или null

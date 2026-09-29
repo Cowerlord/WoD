@@ -3,7 +3,7 @@ import { CLANS } from "../data/clans.js";
 import { WEAPONS } from "../data/weapons.js";
 import { ARMOR } from "../data/armor.js";
 import { CLOTHING, DEFAULT_CLOTHING } from "../data/clothing.js";
-import { SKILLS, SKILL_PICKS } from "../data/skills.js";
+import { SKILLS, SKILL_PICKS, SKILL_ALIASES, SKILL_MAX } from "../data/skills.js";
 import { blankCharacter, newId } from "./blank.js";
 import { generationInfo } from "../data/blood.js";
 import { COMBAT_EFFECTS, CONDITIONS } from "../data/play.js";
@@ -63,9 +63,32 @@ export function sanitizeCharacter(d) {
   out.humanity = clampInt(d.humanity, 0, CONFIG.maxHumanity, CONFIG.startingHumanity);
   out.avatar = typeof d.avatar === "string" && d.avatar.length < 4_000_000 && AVATAR_RE.test(d.avatar) ? d.avatar : null;
 
+  // Навык от клана: выбранный вариант; если не выбран (старые персонажи) — дополнительный навык клана
+  const clanOpts = clan?.clanSkills ? [clan.clanSkills.bonus, ...clan.clanSkills.core] : [];
+  out.clanSkill = clanOpts.includes(d.clanSkill) ? d.clanSkill : (clan?.clanSkills?.bonus ?? null);
+
+  // Стартовые выборы — только основные навыки, не клановый и без повторов; старые id переносятся на новые
   for (const pick of SKILL_PICKS) {
-    const id = d.skills?.[pick.key];
-    if (SKILLS.some(k => k.id === id) && id !== clan?.skill && !Object.values(out.skills).includes(id)) out.skills[pick.key] = id;
+    const raw = d.skills?.[pick.key];
+    const id = SKILL_ALIASES[raw] ?? raw;
+    const sk = SKILLS.find(k => k.id === id);
+    if (sk?.core && id !== out.clanSkill && !Object.values(out.skills).includes(id)) out.skills[pick.key] = id;
+  }
+
+  // Навыки от Мастера: { id: 1…SKILL_MAX }
+  const granted = d.bonusSkills && typeof d.bonusSkills === "object" ? d.bonusSkills : {};
+  out.bonusSkills = {};
+  for (const [raw, v] of Object.entries(granted)) {
+    const id = SKILL_ALIASES[raw] ?? raw;
+    const n = clampInt(v, 0, SKILL_MAX, 0);
+    if (n && SKILLS.some(k => k.id === id)) out.bonusSkills[id] = Math.min(SKILL_MAX, (out.bonusSkills[id] || 0) + n);
+  }
+
+  // Характеристика броска для навыков с выбором (Запугивание: СИЛ или ХАР)
+  out.skillAbility = {};
+  for (const sk of SKILLS.filter(k => k.abilities)) {
+    const a = d.skillAbility?.[sk.id];
+    if (sk.abilities.includes(a)) out.skillAbility[sk.id] = a;
   }
 
   out.armorId = ARMOR.some(a => a.id === d.armorId) ? d.armorId : null;

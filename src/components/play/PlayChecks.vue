@@ -1,15 +1,14 @@
 <script setup>
 import { computed, ref } from "vue";
 import { ABILITIES, DIFFICULTY } from "../../data/config.js";
-import { SKILLS } from "../../data/skills.js";
 import { rules } from "../../stores/editor.js";
 import { rollAbility, rollSave, rollSkill, rollFrenzy } from "../../stores/rolls.js";
 import { abbrOf, fmt } from "../../character/format.js";
 
 const query = ref("");
-const skills = computed(() => SKILLS.filter(rules.skillAllowed)
+const skills = computed(() => rules.visibleSkills()
   .filter(k => !query.value.trim() || k.name.toLowerCase().includes(query.value.trim().toLowerCase())));
-const total = sk => rules.mod(sk.ability) + rules.skillBonus(sk.id);
+const total = sk => rules.skillTotal(sk);
 </script>
 
 <template>
@@ -33,7 +32,7 @@ const total = sk => rules.mod(sk.ability) + rules.skillBonus(sk.id);
     <input v-model="query" type="text" class="search" placeholder="Найти навык…">
     <div class="skills">
       <button v-for="sk in skills" :key="sk.id" type="button" class="roll-btn skill" :class="{ own: rules.skillBonus(sk.id) }" @click="rollSkill(sk)">
-        <span>{{ sk.name }}</span><small>{{ abbrOf(sk.ability) }}{{ rules.skillBonus(sk.id) ? ` · навык ${fmt(rules.skillBonus(sk.id))}` : "" }}</small>
+        <span>{{ sk.name }}</span><small>{{ abbrOf(rules.skillAbility(sk)) }}{{ rules.skillBonus(sk.id) ? ` · навык ${fmt(rules.skillBonus(sk.id))}` : "" }}</small>
         <b>{{ fmt(total(sk)) }}</b>
       </button>
     </div>

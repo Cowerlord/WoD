@@ -35,3 +35,9 @@ export function describeError(err, limit) {
 
 // Ошибки базы (SQLSTATE из 5 символов) повторять бессмысленно, сетевые — повторяем
 export const isRetryable = err => err?.code !== "GONE" && !/^[0-9A-Z]{5}$/.test(err?.code || "");
+
+// Скрытый уровень персонажа: таблица character_levels, читает и меняет только админ (RLS)
+const levels = () => supabase.from("character_levels");
+export const fetchLevel = id => levels().select("level").eq("character_id", id).maybeSingle();
+export const fetchLevels = () => levels().select("character_id, level");
+export const saveLevel = (id, level) => levels().upsert({ character_id: id, level, updated_at: new Date().toISOString() });

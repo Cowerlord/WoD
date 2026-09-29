@@ -8,6 +8,7 @@ import { sanitizeCharacter, FILE_FORMAT } from "../../character/sanitize.js";
 import { liveSummary } from "../../character/rules.js";
 import CharacterCard from "../common/CharacterCard.vue";
 import ConfirmButton from "../common/ConfirmButton.vue";
+import { levels, loadAllLevels } from "../../stores/levels.js";
 
 const rows = ref(null);
 
@@ -17,7 +18,7 @@ const groups = computed(() => {
     const owner = r.owner?.username ?? "?";
     if (!map.has(owner)) map.set(owner, []);
     const ch = sanitizeCharacter({ format: FILE_FORMAT, clanId: r.clan_id, abilities: r.abilities, disciplines: r.disciplines, session: r.session });
-    map.get(owner).push({ id: r.id, name: r.name, clanId: r.clan_id, updatedAt: r.updated_at, avatar: r.avatar, status: liveSummary(ch) });
+    map.get(owner).push({ id: r.id, name: r.name, clanId: r.clan_id, updatedAt: r.updated_at, avatar: r.avatar, status: liveSummary(ch) + (isAdmin() ? ` · 🔒 ур. ${levels.byId[r.id] ?? 1}` : "") });
   }
   return [...map].sort(([a], [b]) => a.localeCompare(b));
 });
@@ -26,6 +27,7 @@ async function load() {
   const { data, error } = await fetchOthers(auth.me.id);
   if (error) { rows.value = []; editor.allError = `Не удалось загрузить: ${describeError(error, auth.charLimit)}.`; return; }
   rows.value = data;
+  if (isAdmin()) loadAllLevels();   // уровни видит только Мастер
 }
 
 async function remove(id) {
