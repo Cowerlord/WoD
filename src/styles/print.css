@@ -41,6 +41,11 @@
   #step-5 .panel > h2 { display: none; }
   body:not(.print-cheat) #cheat-block { display: none !important; }
   body.print-cheat #sheet-block { display: none !important; }
+  body:not(.print-bio) #bio-block { display: none !important; }
+  body.print-bio #sheet-block, body.print-bio #cheat-block { display: none !important; }
+  #bio-block { margin: 0 !important; border: 0 !important; padding: 0 !important; }
+  #bio-block .export-row, #cheat-block .export-row { display: none !important; }
+  #cheat-block { border: 0 !important; padding: 0 !important; }
   #cheat-block { margin: 0; }
 
   * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

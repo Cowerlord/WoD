@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import { auth } from "../../stores/auth.js";
 import { roster, myCount, isFull, deleteMine, addMine } from "../../stores/roster.js";
 import { character, loadCharacter, openMine, startNew } from "../../stores/editor.js";
-import { sanitizeCharacter } from "../../character/sanitize.js";
+import { sanitizeCharacter, serialize } from "../../character/sanitize.js";
 import { liveSummary } from "../../character/rules.js";
 import { blankCharacter } from "../../character/blank.js";
 import { downloadJson } from "../../lib/files.js";
@@ -20,7 +20,8 @@ function status(ch) {
 }
 
 function exportOne(ch) {
-  try { downloadJson(sanitizeCharacter(ch), ch.name); } catch { /* повреждённая запись */ }
+  // serialize добавляет пометку формата — без неё файл не примет импорт
+  try { downloadJson(serialize(sanitizeCharacter(ch)), ch.name); } catch { /* повреждённая запись */ }
 }
 
 async function remove(id) {

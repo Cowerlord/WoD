@@ -25,7 +25,7 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
 <template>
   <div class="panel">
     <h2>Дисциплины</h2>
-    <p class="hint">У вас <b>3 очка</b>: уровень дисциплины стоит столько очков, какой он по счёту.
+    <p class="hint">У клана 4 дисциплины, у вас <b>3 очка</b>: уровень дисциплины стоит столько очков, какой он по счёту.
       Можно взять три дисциплины на ур. 1, одну на ур. 2 и одну на ур. 1 — или одну сразу на ур. 3.
       <RuleLink rule="disciplines">Все дисциплины</RuleLink></p>
     <template v-if="isAdmin()">
@@ -45,7 +45,8 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
         <div v-for="id in rules.clan().disciplines" :key="id" class="disc" :class="{ selected: rules.discLevel(id) }">
           <div style="flex:1">
             <div class="disc-head">
-              <b>{{ discipline(id).name }}</b>
+              <b>{{ discipline(id).name }}
+                <span v-if="rules.clan().extraDiscipline?.id === id" class="extra-tag">4-я дисциплина клана</span></b>
               <span class="lvl-picker" title="Уровень">
                 <button v-for="lvl in levels" :key="lvl" type="button" :class="{ on: lvl === rules.discLevel(id) }"
                         :disabled="lvl - rules.discLevel(id) > pointsLeft()" @click="setLevel(id, lvl)">
@@ -53,6 +54,7 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
                 </button>
               </span>
             </div>
+            <p v-if="rules.clan().extraDiscipline?.id === id" class="extra-lore">{{ rules.clan().extraDiscipline.lore }}</p>
             <DisciplineLevels :levels="discipline(id).levels" :owned="rules.discLevel(id)" />
           </div>
         </div>
@@ -70,6 +72,11 @@ const setBonus = v => { character.bonusPoints = clampInt(v, 0, CONFIG.maxBonusPo
 
 <style scoped>
 .bonus-field { max-width: 320px; }
+.extra-tag {
+  margin-left: 8px; padding: 1px 8px; border: 1px solid var(--gold); border-radius: 10px;
+  font-family: var(--font-body); font-weight: 400; font-size: .8rem; color: var(--gold); letter-spacing: 0;
+}
+.extra-lore { margin: 4px 0 6px; font-style: italic; color: var(--text-dim); }
 .bonus-given { color: var(--gold); margin: 0 0 16px; }
 .pool { margin-bottom: 16px; }
 .dots { color: var(--blood-bright); letter-spacing: .1em; }

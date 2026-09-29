@@ -9,6 +9,7 @@ import AvatarField from "./AvatarField.vue";
 import VSelect from "../common/VSelect.vue";
 import { generationInfo } from "../../data/blood.js";
 import { isAdmin } from "../../stores/auth.js";
+import AlignmentWheel from "./AlignmentWheel.vue";
 
 const humanityOptions = Array.from({ length: CONFIG.maxHumanity + 1 }, (_, h) =>
   ({ value: h, label: `${h}${h === CONFIG.startingHumanity ? " (старт)" : ""}` }));
@@ -31,6 +32,9 @@ function selectClan(id) {
     <TextField v-model="character.concept" label="Концепт" :max="CONFIG.conceptMaxLength"
                placeholder="Например: Бывший следователь, потерявший веру" />
     <AvatarField />
+    <div class="field"><span class="field-title">Мировоззрение</span>
+      <AlignmentWheel v-model="character.alignment" :disabled="editor.owner.readOnly" />
+    </div>
     <label class="field"><span>Человечность</span>
       <VSelect v-model="character.humanity" :options="humanityOptions" />
     </label>
@@ -58,6 +62,7 @@ function selectClan(id) {
 </template>
 
 <style scoped>
+.field-title { display: block; font-family: var(--font-title); font-size: .8rem; letter-spacing: .08em; color: var(--gold); margin-bottom: 4px; }
 .gen { margin: 0 0 14px; }
 .gen b { color: var(--gold); }
 </style>

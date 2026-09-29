@@ -10,11 +10,17 @@ defineProps({ clan: { type: Object, required: true } });
     <p>{{ clan.description }}</p>
     <div>
       <slot name="tags-label" />
-      <span v-for="d in clan.disciplines" :key="d" class="tag">{{ discipline(d).name }}</span>
+      <span v-for="d in clan.disciplines" :key="d" class="tag">{{ discipline(d).name }}{{ clan.extraDiscipline?.id === d ? " ★" : "" }}</span>
     </div>
+    <p v-if="clan.extraDiscipline" class="extra-lore">
+      ★ {{ discipline(clan.extraDiscipline.id).name }} — 4-я дисциплина клана: {{ clan.extraDiscipline.lore }}</p>
     <p v-if="clan.ability" class="bane" style="border-style:solid">
       <b>✦ {{ clan.ability.name }} [{{ clan.ability.cost }}]:</b> {{ clan.ability.text }}
     </p>
     <p v-if="clan.bane" class="bane"><b>⚠ {{ clan.bane.name }}:</b> {{ clan.bane.text }}</p>
   </div>
 </template>
+
+<style scoped>
+.extra-lore { margin: 6px 0 0; font-style: italic; color: var(--text-dim); }
+</style>

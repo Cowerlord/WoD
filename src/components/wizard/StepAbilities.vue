@@ -6,7 +6,8 @@ import { modOf, fmt } from "../../character/format.js";
 import RuleLink from "../common/RuleLink.vue";
 import VSelect from "../common/VSelect.vue";
 
-const takenByOther = (key, v) => Object.entries(character.abilities).some(([k, val]) => k !== key && val === v);
+// Кто уже держит это значение (кроме самой характеристики)
+const holderOf = (key, v) => ABILITIES.find(a => a.key !== key && character.abilities[a.key] === v) || null;
 
 const pool = computed(() => {
   const left = Object.values(character.abilities).filter(v => v != null);
@@ -17,12 +18,18 @@ const pool = computed(() => {
   });
 });
 
+// Занятое значение можно выбрать — характеристики поменяются местами
 const optionsFor = key => [
   { value: null, label: "—" },
-  ...CONFIG.abilityArray.map(v => ({ value: v, label: String(v), disabled: takenByOther(key, v), hint: takenByOther(key, v) ? "занято" : "" })),
+  ...CONFIG.abilityArray.map(v => {
+    const holder = holderOf(key, v);
+    return { value: v, label: String(v), hint: holder ? `↔ ${holder.abbr}` : "" };
+  }),
 ];
 
 function assign(key, v) {
+  const holder = v == null ? null : holderOf(key, v);
+  if (holder) character.abilities[holder.key] = character.abilities[key];   // обмен: отдаём своё прежнее значение (или пусто)
   character.abilities[key] = v;
   clearError(2);
 }
@@ -32,6 +39,7 @@ function assign(key, v) {
   <div class="panel">
     <h2>Характеристики</h2>
     <p class="hint">Распределите значения из массива. Каждое число можно использовать только один раз.
+      Выберите занятое число — характеристики поменяются значениями (↔).
       <RuleLink rule="basics">Как считаются модификаторы?</RuleLink></p>
     <div class="pool">Массив: <span v-for="(p, i) in pool" :key="i" class="chip" :class="{ used: p.used }">{{ p.v }}</span></div>
     <div class="abilities">

@@ -4,9 +4,12 @@ import { WEAPONS } from "../data/weapons.js";
 import { ARMOR } from "../data/armor.js";
 import { CLOTHING, DEFAULT_CLOTHING } from "../data/clothing.js";
 import { SKILLS, SKILL_PICKS } from "../data/skills.js";
-import { blankCharacter } from "./blank.js";
+import { blankCharacter, newId } from "./blank.js";
 import { generationInfo } from "../data/blood.js";
 import { COMBAT_EFFECTS, CONDITIONS } from "../data/play.js";
+import { BIO_FIELDS, BIO_MAX } from "../data/bio.js";
+import { ALIGNMENTS } from "../data/alignment.js";
+import { RETAINER_KINDS, RETAINER_NAME_MAX, RETAINER_DESC_MAX } from "../data/retainers.js";
 
 export const NOTES_MAX = 2000;
 
@@ -19,6 +22,7 @@ export const cleanText = (v, max) => v
   .slice(0, max);
 
 const cleanNotes = v => String(v ?? "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "").slice(0, NOTES_MAX);
+const cleanBio = v => String(v ?? "").replace(/[\u0000-\u0009\u000b-\u001f\u007f]/g, "").slice(0, BIO_MAX);
 
 export function clampInt(v, min, max, fallback) {
   const n = Math.trunc(Number(v));
@@ -68,6 +72,17 @@ export function sanitizeCharacter(d) {
   const clothing = CLOTHING.find(c => c.id === d.clothingId);
   out.clothingId = clothing && !clothing.excludeClans?.includes(out.clanId) ? clothing.id : DEFAULT_CLOTHING;
   out.step = clampInt(d.step, 1, TOTAL_STEPS, 1);
+  const bio = d.bio && typeof d.bio === "object" ? d.bio : {};
+  out.bio = Object.fromEntries(BIO_FIELDS.map(f => [f.id, cleanBio(bio[f.id])]));
+  out.alignment = ALIGNMENTS.some(a => a.id === d.alignment) ? d.alignment : null;
+  for (const kind of RETAINER_KINDS) {
+    const list = Array.isArray(d[kind.key]) ? d[kind.key] : [];
+    out[kind.key] = list.slice(0, kind.max).map(r => ({
+      id: typeof r?.id === "string" && /^[\w-]{1,40}$/.test(r.id) ? r.id : newId(),
+      name: cleanText(String(r?.name ?? ""), RETAINER_NAME_MAX).trim(),
+      desc: cleanText(String(r?.desc ?? ""), RETAINER_DESC_MAX).trim(),
+    })).filter(r => r.name);
+  }
 
   const s = d.session && typeof d.session === "object" ? d.session : {};
   out.session = {

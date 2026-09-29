@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import { rules } from "../../stores/editor.js";
-import { fmt, speedText } from "../../character/format.js";
+import { fmt } from "../../character/format.js";
 import { rollInitiative } from "../../stores/rolls.js";
 
 const s = computed(() => rules.combatStats());
@@ -37,7 +37,6 @@ const initNote = computed(() => s.value.initAdvantage ? "всегда с пре�
     <div class="cb">
       <span class="lbl">Скорость</span>
       <div class="row"><span class="v">{{ s.speed }}</span><span v-if="rules.passiveNote('speed')" class="note">{{ rules.passiveNote("speed").trim() }}</span></div>
-      <div class="note">{{ speedText(s.speed) }}{{ s.noDash ? ". Рывок нельзя (тяжёлая броня)" : "" }}</div>
     </div>
   </section>
 </template>

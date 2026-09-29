@@ -1,4 +1,5 @@
 import { ABILITIES, CONFIG } from "../data/config.js";
+import { blankBio } from "../data/bio.js";
 import { DEFAULT_CLOTHING } from "../data/clothing.js";
 
 export const newId = () => "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -34,6 +35,10 @@ export function blankCharacter() {
     avatar: null,
     skills: { two: null, one: null },
     armorId: null,
+    bio: blankBio(),            // описание персонажа — отдельный лист
+    alignment: null,            // мировоззрение (id из ALIGNMENTS) или null
+    herd: [],                   // Стадо: [{ id, name, desc }]
+    ghouls: [],                 // Гули: [{ id, name, desc }]
     clothingId: DEFAULT_CLOTHING,
     session: blankSession(),
   };
